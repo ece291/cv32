@@ -454,6 +454,29 @@ dpmi_readmem (word32 physaddr, void *buf, unsigned len)
   return ok;
 }
 /* ------------------------------------------------------------------------- */
+/* Get a descriptor from the LDT, entry NO, to DESCR.  Return its type, or
+   -1 in case of failure.  */
+
+static int
+getldtdescriptor (int no, void *descr)
+{
+  union REGS regs;
+  struct SREGS sregs;
+
+  regs.w.ax = 0x000B;
+  regs.w.bx = no;
+  sregs.cs = _go32_my_cs ();
+  sregs.ds = _go32_my_ds ();
+  sregs.es = _go32_my_ds ();
+  sregs.fs = _go32_my_ds ();
+  sregs.gs = _go32_my_ds ();
+  regs.d.edi = (unsigned)descr;
+  int86x (0x31, &regs, &regs, &sregs);
+  if (regs.w.cflag)
+    return -1;
+  return ((GDT_S *)descr)->stype & 0x1f;
+}
+/* ------------------------------------------------------------------------- */
 /* Get a descriptor from TABLE, entry NO, to DESCR.  Return its type, or
    -1 in case of failure.  */
 
@@ -697,7 +720,7 @@ activate_breakpoints (void)
   int b, no;
   BP_ENTRY *bep;
 
-  no = 0;
+  no = 4; /* disable hardware breakpoints. */
   edi.dr[7] = 0;
   /* First handle data breakpoints.  */
   for (b = 0, bep = breakpoint_table; b < breakpoint_count; b++, bep++)
@@ -1120,8 +1143,15 @@ step (KIND_TYPE kind)
   if ((terminated = (i == 0x21) && (a_tss.tss_eax & 0xff00) == 0x4c00))
     a_tss.tss_eip -= 2;	 /* point back to Int 21h */
   if ((int03hit = (i == 0x03)
-       && get_breakpoint (BP_Code, 0, a_tss.tss_eip - 1) != -1))
+       && (get_breakpoint (BP_Code, 0, a_tss.tss_eip - 1) != -1 || kind == R_RunMain)))
     a_tss.tss_eip--;  /* point back to Int 3 */
+/*  if (i == 0x03 && get_breakpoint (BP_Code, 0, a_tss.tss_eip - 1) != -1) {
+    a_tss.tss_eip--; int03hit = 1;
+  } else if (i == 0x03 && get_breakpoint (BP_Code, 0, a_tss.tss_eip) != -1
+       && a_tss.tss_eip == main_entry)
+    int03hit = 1;
+  else
+    int03hit = 0;*/
   if (kind == R_Over && b >= 0)
     reset_breakpoint (b);  /* reset only after get_breakpoint did its thing */
   if (tracing) return;
@@ -1864,7 +1894,6 @@ redraw (int first)
     else if (ldt_pane_active)
       {
 	int ldt;
-	word32 limit;
 
 	asm volatile
 	  ("xorl  %%eax,%%eax
@@ -1883,7 +1912,7 @@ redraw (int first)
 	  {
 	    /* We can always get the limit with the `lsl' instruction, but
 	       there seems to be no other way of getting the base.  */
-	    if (getdescriptor (gdtlinear.base, ldt / 8, &descr) != 2)
+	    /*if (getdescriptor (gdtlinear.base, ldt / 8, &descr) != 2)
 	      putl (1, y++, width, "LDT is present, but unreadable.");
 	    else
 	      {
@@ -1894,7 +1923,18 @@ redraw (int first)
 		if (descr.lim1 & 0x80)
 		  limit = (limit << 12) | 0xfff;
 		ldtlinear.limit = (limit > 0xffff) ? 0xffff : limit;
-	      }
+	      }*/
+	    asm volatile
+	      ("movl  %1,%%eax
+	        lsl   %%eax,%%eax
+	        movl  %%eax,%0"
+	       : "=r" ((int)(ldtlinear.base))
+	       : "r" ((int)(ldt)) /* inputs */
+	       : "%eax");
+	    ldtlinear.base <<= 3;
+	    ldtlinear.limit = (ldtlinear.base > 0xffff) ? 0xffff :
+	      (short)ldtlinear.base;
+	    ldtlinear.base = 0;
 	  }
 	typ = 2;
 	base = ldtlinear.base;
@@ -1911,7 +1951,8 @@ redraw (int first)
 	    buf1 = "(null entry)";
 	  else
 	    {
-	      if (getdescriptor (base, i, &descr) < 0)
+	      /*if (getdescriptor (base, i, &descr) < 0)*/
+	      if (getldtdescriptor (i * 8 | (typ ? ((a_tss.tss_cs & 3) | 4) : 0), &descr) < 0)
 		buf1 = "Read failure.";
 	      else
 		{
