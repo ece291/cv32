@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2001/02/05 08:30:32 pete Exp $
+# $Id: Makefile,v 1.9 2001/03/21 03:48:37 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR
 
@@ -31,14 +31,18 @@ EO_TV = \
 .cpp.o:
 	gpp $(CPPFLAGS) -o $*.o -c $*.cpp
 
-all : cv32 cv32tv
+all : cv32.exe cv32tv.exe
 
 cv32 : $(EO) 
 	gcc -v -o cv32 $(EO) -ldbg
+
+cv32.exe : cv32
 	stubify cv32
 
 cv32tv : $(EO_TV)
 	gcc -o cv32tv $(EO_TV) -ldbg -lrhtv -lstdcxx
+
+cv32tv.exe : cv32tv
 	stubify cv32tv
 
 clean :
