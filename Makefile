@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.15 2001/04/22 22:31:50 pete Exp $
+# $Id: Makefile,v 1.16 2001/04/23 03:31:07 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
 
@@ -44,7 +44,15 @@ obj/%.o : src/%.c
 obj/%.o : src/%.cpp
 	gpp $(CPPFLAGS) -c $< -o $@
 
-.PHONY: all clean veryclean cv32objs cv32tvobjs
+obj/%.o : tests/%.asm
+	nasm -f coff -o $@ $<
+
+.PHONY: tests clean veryclean cv32objs cv32tvobjs
+
+tests: tests/test01.exe tests/test02.exe
+
+tests/%.exe : obj/%.o
+	gcc -o $@ $<
 
 clean :
 	-rm -f obj/*.o
@@ -54,6 +62,7 @@ clean :
 veryclean : clean
 	-rm -f obj/nasm/*.o
 	-rm -f src/expr.c
+	-rm -f tests/*.exe
 
 # DEPENDENCIES
 
