@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.11 2002/03/30 18:26:33 pete Exp $ */
+/* $Id: fullscr.c,v 1.12 2002/03/30 18:43:20 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -280,7 +280,7 @@ static char *helptext[] = {
   "",
   "",
   "",
-  "Numeric processor pane keys:",
+  "Numeric processor (SSE) and FPU pane keys:",
   "",
   "C-e        : Empty register.",
   "C-z        : Zero register.",
