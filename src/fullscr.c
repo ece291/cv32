@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.8 2001/03/17 05:53:05 pete Exp $ */
+/* $Id: fullscr.c,v 1.9 2001/12/12 07:32:07 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -741,7 +741,7 @@ activate_breakpoints (void)
   int b, no;
   BP_ENTRY *bep;
 
-  no = 4; /* disable hardware breakpoints. */
+  no = 0;
   edi.dr[7] = 0;
   /* First handle data breakpoints.  */
   for (b = 0, bep = breakpoint_table; b < breakpoint_count; b++, bep++)
@@ -1098,7 +1098,7 @@ step (KIND_TYPE kind)
 	}
       break;
     default:
-      /* Nothing.  */
+      ; /* Nothing.  */
     }
 
  retry:
@@ -1210,6 +1210,7 @@ step (KIND_TYPE kind)
 	  bep->count = 0;
 	}
     error:
+	;
     }
 
   code_pane_goto (a_tss.tss_eip);
@@ -1910,9 +1911,9 @@ redraw (int first)
 	int ldt;
 
 	asm volatile
-	  ("xorl  %%eax,%%eax
-	    sldt  %%ax
-	    movl  %%eax,%0"
+	  ("xorl  %%eax,%%eax   \n"
+	   "sldt  %%ax          \n"
+	   "movl  %%eax,%0"
 	   : "=r" ((int)(ldt))
 	   : /* no inputs.  */
 	   : "%eax");
@@ -1939,9 +1940,9 @@ redraw (int first)
 		ldtlinear.limit = (limit > 0xffff) ? 0xffff : limit;
 	      }*/
 	    asm volatile
-	      ("movl  %1,%%eax
-	        lsl   %%eax,%%eax
-	        movl  %%eax,%0"
+	      ("movl  %1,%%eax    \n"
+	       "lsl   %%eax,%%eax \n"
+	       "movl  %%eax,%0"
 	       : "=r" ((int)(ldtlinear.base))
 	       : "r" ((int)(ldt)) /* inputs */
 	       : "%eax");
@@ -3298,6 +3299,7 @@ gildt_pane_command (int key)
 	      show_tss (&descr);
 	      break;
 	    default:
+	      ;
 	    }
 	  }
 	break;
@@ -3704,7 +3706,7 @@ debugger(void)
 		initdisplay (0);
 		break;
 	      case -1:
-		/* Nothing.  */
+		; /* Nothing.  */
 	      }
 	    redraw (0);
 	  }
