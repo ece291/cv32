@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.4 2001/02/04 21:41:58 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.5 2001/02/05 08:30:50 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -30,6 +30,7 @@
 #include "debugapp.h"
 #include "fileview.h"
 #include "ldt.h"
+#include "numproc.h"
 #include "cvconst.h"
 
 int main(int argc, char **argv)
@@ -91,6 +92,13 @@ void TDebugApp::handleEvent(TEvent &event)
 
 	    case cmLDTCmd:
 		w = validView(new TLDTWindow(TProgram::deskTop->getExtent()));
+		if(w != 0)
+		    deskTop->insert(w);
+		break;
+
+	    case cmNumericProcessorCmd:
+		w = validView(
+		    new TNumericProcessorWindow(TProgram::deskTop->getExtent()));
 		if(w != 0)
 		    deskTop->insert(w);
 		break;
