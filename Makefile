@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2001/01/31 04:38:59 pete Exp $
+# $Id: Makefile,v 1.4 2001/01/31 04:48:22 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR
 
@@ -16,17 +16,17 @@ EO = \
 .c.o:
 	gcc $(CFLAGS) -o $*.o -c $*.c
 
-all : fsdb
+all : cv32
 
-fsdb : $(EO) 
-	gcc -v -o fsdb $(EO) -ldbg
-	stubify fsdb
+cv32 : $(EO) 
+	gcc -v -o cv32 $(EO) -ldbg
+	stubify cv32
 
 clean :
 	-del nasm\*.o
 	-del *.o
-	-del fsdb
-	-del fsdb.exe
+	-del cv32
+	-del cv32.exe
 	-del expr.c
 
 # DEPENDENCIES

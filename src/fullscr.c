@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.5 2001/01/31 03:48:33 pete Exp $ */
+/* $Id: fullscr.c,v 1.6 2001/01/31 04:48:22 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -141,9 +141,11 @@ static word32 allowed_descriptors[] = {
   0xffffdafaL};  /* LDT */
 /* ------------------------------------------------------------------------- */
 static char *helptext[] = {
-  "Welcome to Sally Full Screen Debugger!",
+  "Welcome to CV32!",
+  "(Based on the Sally Full Screen Debugger)",
   "",
   "This program is copyright 1994-1996 by Morten Welinder.",
+  "CV32 modifications copyright 2000 by Peter Johnson.",
   "For further copyright information, including other parties'",
   "claims, please read the manual.",
   "",
@@ -2203,7 +2205,7 @@ setup_save (int dummy)
   f = fopen (setupfilename, "wt");
   if (f)
     {
-      fprintf (f, "# Sally Full Screen Debugger version %.2f\n",
+      fprintf (f, "# CV32 version %.2f\n",
 	       FULLSCR_VERSION);
       fprintf (f, "\n[Colours]\n");
       fprintf (f, "%d %d %d %d %d %d %d %d %d %d %d %d\n",
@@ -2262,7 +2264,7 @@ setup_restore (int booting)
     {
       char version[5], myversion[5], section[21];
 
-      if (fscanf (f, "# Sally Full Screen Debugger version %4s", version) != 1)
+      if (fscanf (f, "# CV32 version %4s", version) != 1)
 	goto error;
       sprintf (myversion, "%.2f", FULLSCR_VERSION);
       if (strcmp (version, myversion))
@@ -2471,7 +2473,7 @@ initialize ()
   if (access (setupfilename, R_OK) == 0)
     setup_restore (1);
   initdisplay (1);
-  message (CL_Info, "Sally Full Screen Debugger");
+/*  message (CL_Info, "Sally Full Screen Debugger");*/
 }
 /* ------------------------------------------------------------------------- */
 static void
