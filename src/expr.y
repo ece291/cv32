@@ -1,17 +1,17 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: expr.y,v 1.2 2001/01/31 03:24:06 pete Exp $ */
+/* $Id: expr.y,v 1.3 2001/04/28 21:34:30 pete Exp $ */
 %{
 
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #ifndef TEST
-#include "ed.h"
 #include <debug/syms.h>
 #endif
 #define YYSTYPE long
 
+typedef unsigned long word32;
 int valid_addr(word32 addr, int len);
 
 #ifdef TEST
