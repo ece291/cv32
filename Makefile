@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.18 2001/04/27 06:27:23 pete Exp $
+# $Id: Makefile,v 1.19 2001/04/27 06:29:09 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
 
@@ -80,7 +80,7 @@ src/nasm/names.c: src/nasm/insnsn.c
 src/nasm/nasm.h: src/nasm/insnsi.h
 
 obj/debugapp.o: include/debugapp.h include/fileview.h include/ldt.h \
-	include/numproc.h include/register.h include/cvconst.h
+	include/numproc.h include/register.h include/cvconst.h \
 	include/debugger.h
 obj/debugger.o: include/debugger.h
 obj/cvmenu.o: include/debugapp.h include/cvconst.h
