@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.10 2002/03/30 06:31:12 pete Exp $ */
+/* $Id: fullscr.c,v 1.11 2002/03/30 18:26:33 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -48,7 +48,7 @@ int can_longjmp = 0;
 jmp_buf debugger_jmpbuf;
 
 /* Information about panes.  */
-#define PANECOUNT 16
+#define PANECOUNT 17
 enum bool {
   PANE_CODE = 0,
   PANE_REGISTER = 1,
@@ -65,7 +65,8 @@ enum bool {
   PANE_HELP = 12,
   PANE_MODULE = 13,
   PANE_SOURCE = 14,
-  PANE_WATCH = 15};
+  PANE_WATCH = 15,
+  PANE_SSE = 16};
 
 static int pane, ulpane, dlpane, pane_positions[PANECOUNT], pane_pos;
 static word32 code_dump_origin, code_dump_last;
@@ -91,6 +92,7 @@ static int source_text_count, source_pane_origin;
 static char **source_pane_text, *source_pane_module;
 static int watch_text_count, watch_pane_origin;
 static char **watch_pane_text;
+static int sse_pane_origin;
 
 static int code_pane_active;
 static int register_pane_active;
@@ -108,6 +110,7 @@ static int help_pane_active;
 static int module_pane_active;
 static int source_pane_active;
 static int watch_pane_active;
+static int sse_pane_active;
 
 /* debugging functions from dbgcom.c (libdbg) */
 extern int invalid_sel_addr(short sel, unsigned a, unsigned len, char for_write);
@@ -124,6 +127,8 @@ static int dpmi;
 static int terminated;
 char *setupfilename;
 extern int evaluate (char *, long *, char **);
+
+static int enable_sse = 0;
 
 /* Pseudo-keys.  */
 #define PK_Redraw 0x2ff
@@ -154,12 +159,13 @@ static char *helptext[] = {
   "",
   "Alt-C      : Select code (disassembly) pane.",
   "Alt-E      : Evaluate expression.",
+  "Alt-F      : Select floating point (FPU) pane.",
   "Alt-G      : Select GDT pane.",
   "Alt-H      : Select help pane.",
   "Alt-I      : Select IDT pane.",
   "Alt-L      : Select LDT pane.",
   "Alt-M      : Select module pane.",
-  "Alt-N      : Select numeric processor (fpu) pane.",
+  "Alt-N      : Select numeric processor (SSE) pane.",
   "Alt-S      : Select stack pane.",
   "Alt-W      : Select where-is (symbol list) pane.",
   "Alt-X      : Exit right away.",
@@ -693,6 +699,18 @@ show_tss (void *descr)
   (void) getxkey ();
 }
 /* ------------------------------------------------------------------------- */
+/* Get SSE register state by using fxsave. */
+static unsigned char fxstate[512];
+#define XMM_reg(x)  (&fxstate[160+(x)*16])
+
+inline void
+get_sse_registers (void)
+{
+    if (enable_sse)
+	asm volatile ("fxsave %0" : "=m" (fxstate));
+}
+
+/* ------------------------------------------------------------------------- */
 /* Check that it is valid to access at ADDR, LENGTH bytes.  Two adjacent
    areas will not be considered as one area (this is a bug).  */
 
@@ -1055,6 +1073,7 @@ go (int bp)
   if (bp) activate_breakpoints ();
   run_child ();
   if (bp) deactivate_breakpoints ();
+  if (enable_sse) get_sse_registers();
 }
 /* ------------------------------------------------------------------------- */
 /* Let the child process loose in the specified way.  Try to optimize for
@@ -1703,6 +1722,47 @@ redraw (int first)
       putl (1, y++, width, "");
   }
 
+  if (sse_pane_active)
+  {
+    int i, y = 1, width = cols - 19;
+    if (enable_sse) {
+      for (i = sse_pane_origin; y <= toplines && i < 8*4; i++) {
+	/* We assume that `float' is the same type as MMX_reg(i)[j*4]. */
+	unsigned char *xreg = &(XMM_reg(i/4))[(i%4)*4];
+	int sign = xreg[3] >> 7;
+	unsigned char exp = xreg[3] & 0x7F;
+	float f = *((float*)xreg);
+	char *dstr = alloca (30);
+
+	dstr[0] = sign ? '-' : '+';
+	dstr[1] = '\0';
+	if (*((unsigned int *)xreg) == 0)
+	  strcat (dstr, "Zero");
+	else if (exp == 0x7F)
+	  {
+	    if (xreg[2] == 0x80 && xreg[1] == 0x00 && xreg[0] == 0x00)
+	      strcat (dstr, "Inf");
+	    else
+	      strcat (dstr, "NaN");
+	  }
+	else
+	  sprintf(dstr, "%+.6g", f);
+
+	if (i%4 == 0)
+	  sprintf (buf, "xmm(%d): %02x%02x%02x%02x %s", i/4,
+		   xreg[3], xreg[2], xreg[1], xreg[0], dstr);
+	else
+	  sprintf (buf, "        %02x%02x%02x%02x %s",
+		   xreg[3], xreg[2], xreg[1], xreg[0], dstr);
+	putl (1, y++, width, buf);
+      }
+    }
+    else
+	putl(1, y++, width, "(SSE not available on this processor)");
+    while (y <= toplines)
+      putl (1, y++, width, "");
+  }
+
   if (stack_pane_active)
   {
     /* Show stack dump */
@@ -2106,6 +2166,7 @@ redraw (int first)
 	/* Fall through */
       case PANE_CODE:
       case PANE_NPX:
+      case PANE_SSE:
       case PANE_GDT:
       case PANE_IDT:
       case PANE_LDT:
@@ -2415,6 +2476,7 @@ select_pane (int p)
       help_pane_active       = (p == PANE_HELP);
       module_pane_active     = (p == PANE_MODULE);
       source_pane_active     = (p == PANE_SOURCE);
+      sse_pane_active        = (p == PANE_SSE);
       break;
     }
   pane = p;
@@ -2427,11 +2489,22 @@ static void
 initialize ()
 {
   int i;
+  unsigned int feature;
 
   terminated = 0;
   dpmi = (_go32_info_block.run_mode == _GO32_RUN_MODE_DPMI);
   asm volatile ("sgdt (_gdtlinear)");
   asm volatile ("sidt (_idtlinear)");
+
+  /* Detect SSE and FXSAVE support via cpuid */
+  asm ("movl $1, %%eax						\n\
+	cpuid"
+	: "=d" (feature)
+	: /* No input */
+	: "%eax", "%ebx", "%ecx");
+
+  if ((feature & (1<<24)) && (feature & (1<<25)))
+    enable_sse = 1;
 
   pane = PANE_CODE;
   pane_pos = 0;
@@ -2465,6 +2538,7 @@ initialize ()
   watch_pane_origin = 0;
   watch_text_count = 0;
   watch_pane_text = xmalloc (watch_text_count * sizeof (char *));
+  sse_pane_origin = 0;
 
   init_colours ();
   if (access (setupfilename, R_OK) == 0)
@@ -3038,7 +3112,7 @@ data_pane_command (int key)
   redraw (0);
 }
 /* ------------------------------------------------------------------------- */
-/* Handle commands local to the npx pane.  */
+/* Handle commands local to the npx (fpu) pane.  */
 
 static void
 npx_pane_command (int key)
@@ -3119,6 +3193,99 @@ npx_pane_command (int key)
       }
   if (regp)
     npx.tag = (npx.tag & ~(3 << (rotreg * 2))) | (tag << (rotreg * 2));
+  redraw (0);
+}
+/* ------------------------------------------------------------------------- */
+/* Handle commands local to the sse pane.  */
+
+static void
+sse_pane_command (int key)
+{
+  int base = 0;
+  int no = sse_pane_origin + pane_pos;
+  int reg = (no - base)/4;
+  int reg_part = (no - base)%4;
+  unsigned char *xreg = &(XMM_reg(reg))[reg_part*4];
+  int sign = xreg[3] >> 7;
+  float *fp = ((float*)xreg);
+  int update = 0;
+  char s[2], *endp, *p;
+  float f;
+
+  if (!enable_sse)
+      return;
+
+  if (!standardmovement (key, base + 8*4, toplines, &sse_pane_origin)
+      && reg >= 0)
+    switch (key)
+      {
+      case K_Control_C:
+      case K_Control_E:
+      case K_Control_Z:
+      case K_Delete:
+      case K_EDelete:
+	memset (xreg, 0, 4);
+	update = 1;
+	break;
+      case K_Control_N:
+	if (sign)
+	    xreg[3] &= 0x7F;
+	else
+	    xreg[3] |= 0x80;
+	update = 1;
+	break;
+      case ' ' ... '~':
+	s[0] = key; s[1] = '\0';
+	if (!read_string (key == '=' ? "" : s) && read_buffer[0] != '\0')
+	  {
+	    p = read_buffer;
+	    while (*p == ' ')
+	      p++;
+	    if (*p == '\0')
+	      break;
+	    strlwr (p);
+	    if (strcmp (p, "+inf") == 0
+		|| strcmp (p, "inf") == 0
+		|| strcmp (p, "-inf") == 0)
+	      {
+		xreg[3] = 0x7f;
+		xreg[2] = 0x80;
+		xreg[1] = xreg[0] = 0;
+		if (*p == '-')
+		  xreg[3] |= 0x80;
+		update = 1;
+	      }
+	    else
+	      {
+		f = strtod (p, &endp);
+		if (*p != '\0' && *endp)
+		  message (CL_Error, "Expression not understood");
+		else
+		  {
+		    *fp = f;
+		    if (*p == '-')
+		      xreg[3] |= 0x80; /* for -Zero */
+		    else
+		      xreg[3] &= 0x7F;
+		    update = 1;
+		  }
+	      }
+	  }
+      }
+
+  if (update)
+    switch (reg)
+      {
+      case 0: asm ("movups %0, %%xmm0" : : "m" (*XMM_reg(0))); break;
+      case 1: asm ("movups %0, %%xmm1" : : "m" (*XMM_reg(1))); break;
+      case 2: asm ("movups %0, %%xmm2" : : "m" (*XMM_reg(2))); break;
+      case 3: asm ("movups %0, %%xmm3" : : "m" (*XMM_reg(3))); break;
+      case 4: asm ("movups %0, %%xmm4" : : "m" (*XMM_reg(4))); break;
+      case 5: asm ("movups %0, %%xmm5" : : "m" (*XMM_reg(5))); break;
+      case 6: asm ("movups %0, %%xmm6" : : "m" (*XMM_reg(6))); break;
+      case 7: asm ("movups %0, %%xmm7" : : "m" (*XMM_reg(7))); break;
+      }
+
   redraw (0);
 }
 /* ------------------------------------------------------------------------- */
@@ -3508,7 +3675,8 @@ debugger(void)
       &help_pane_command,	   /* 12 */
       &module_pane_command,	   /* 13 */
       &source_pane_command,	   /* 14 */
-      &watch_pane_command	   /* 15 */
+      &watch_pane_command,	   /* 15 */
+      &sse_pane_command		   /* 16 */
     };
 
   main_entry = syms_name2val ("_main");
@@ -3579,6 +3747,9 @@ debugger(void)
 	case K_Alt_C:
 	  select_pane (PANE_CODE);
 	  break;
+	case K_Alt_F:
+	  select_pane (PANE_NPX);
+	  break;
 	case K_Alt_G:
 	  select_pane (PANE_GDT);
 	  break;
@@ -3596,7 +3767,7 @@ debugger(void)
 	  select_pane (PANE_MODULE);
 	  break;
 	case K_Alt_N:
-	  select_pane (PANE_NPX);
+	  select_pane (PANE_SSE);
 	  break;
 	case K_Alt_S:
 	  select_pane (PANE_STACK);
@@ -3669,7 +3840,8 @@ debugger(void)
 	      {"Modules",                     &select_pane, PANE_MODULE},
 	      {"C Stack",                     &select_pane, PANE_STACK},
 	      {"Symbol List",                 &select_pane, PANE_WHEREIS},
-	      {"Numeric Processor",           &select_pane, PANE_NPX},
+	      {"Floating Point (FPU)",        &select_pane, PANE_NPX},
+	      {"Numeric Processor (SSE)",     &select_pane, PANE_SSE},
 	      {"Watches",                     &select_pane, PANE_WATCH},
 	      {"System Info",                 &select_pane, PANE_INFO},
 	      {"Data Dump",                   &select_pane, PANE_DATA},
