@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.7 2001/01/31 04:55:16 pete Exp $ */
+/* $Id: fullscr.c,v 1.8 2001/03/17 05:53:05 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -699,6 +699,8 @@ show_tss (void *descr)
 int
 valid_addr (word32 vaddr, int len)
 {
+  return !invalid_sel_addr(a_tss.tss_ds, vaddr, len, 0);
+#if 0
 #ifdef V2DBG
   if (vaddr < 0x1000) return 0;
   if (vaddr >= 0xffffffffl - len) return 0;
@@ -716,6 +718,7 @@ valid_addr (word32 vaddr, int len)
   if (!dpmi && vaddr >= 0xe0000000l && vaddr + len <= 0xe0100000l)
     return 1; /* Remapped core.  */
   return 0;
+#endif
 #endif
 }
 /* ------------------------------------------------------------------------- */
