@@ -1,6 +1,6 @@
 /* CodeView/32 - Debugger Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugger.cpp,v 1.1 2001/04/27 06:18:25 pete Exp $ */
+/* $Id: debugger.cpp,v 1.2 2001/04/27 18:27:03 pete Exp $ */
 
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +21,11 @@ Debugger::Debugger()
 
     breakpoint_count = 0;
     breakpoint_table = (BP_ENTRY *)xmalloc(0);
+}
+
+Debugger::~Debugger()
+{
+    free(breakpoint_table);
 }
 
 /* Set physical breakpoint registers from virtual ones.	 Only the first
