@@ -1,6 +1,6 @@
 /* CodeView/32 - TRegistersWindow Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: register.cpp,v 1.2 2001/03/22 19:57:06 pete Exp $ */
+/* $Id: register.cpp,v 1.3 2001/04/27 06:21:10 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +21,7 @@
 #define Uses_MsgBox
 #include <tv.h>
 
+#include "debugger.h"
 #include "register.h"
 #include "cvconst.h"
 
@@ -36,23 +37,23 @@ public:
 
 private:
     static const char * const regs_names[];
-    static unsigned long * const regs_addr[];
+    static word32 * const regs_addr[];
     static const char regs_type[];
 
     void Popup(TPoint p);
-    unsigned long SetRegister(int reg, bool rel, unsigned long val);
+    word32 SetRegister(int reg, bool rel, word32 val);
 };
 
 const char * const TRegsViewer::regs_names[] = {
     "eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp",
     "cs",   "ds",  "es",  "fs",  "gs",  "ss",
     "eip", "flg" };
-unsigned long * const TRegsViewer::regs_addr[] = {
+word32 * const TRegsViewer::regs_addr[] = {
     &a_tss.tss_eax, &a_tss.tss_ebx, &a_tss.tss_ecx, &a_tss.tss_edx,
     &a_tss.tss_esi, &a_tss.tss_edi, &a_tss.tss_ebp, &a_tss.tss_esp,
-    (unsigned long *)&a_tss.tss_cs, (unsigned long *)&a_tss.tss_ds,
-    (unsigned long *)&a_tss.tss_es, (unsigned long *)&a_tss.tss_fs,
-    (unsigned long *)&a_tss.tss_gs, (unsigned long *)&a_tss.tss_ss,
+    (word32 *)&a_tss.tss_cs, (word32 *)&a_tss.tss_ds,
+    (word32 *)&a_tss.tss_es, (word32 *)&a_tss.tss_fs,
+    (word32 *)&a_tss.tss_gs, (word32 *)&a_tss.tss_ss,
     &a_tss.tss_eip, &a_tss.tss_eflags };
 /* g: general, !: special, s: segment, f: flags, \0: end-of-table */
 const char TRegsViewer::regs_type[] = "ggggggg!ssssss!f";
@@ -216,13 +217,13 @@ void TRegsViewer::Popup(TPoint p)
     }
 }
 
-unsigned long TRegsViewer::SetRegister(int reg, bool rel, unsigned long val)
+word32 TRegsViewer::SetRegister(int reg, bool rel, word32 val)
 {
     switch (regs_type[reg]) {
 	case 's':
 	    if(rel)
-		val += *(unsigned short *)(regs_addr[reg]);
-	    return *(unsigned short *)(regs_addr[reg]) = (unsigned short)val;
+		val += *(word16 *)(regs_addr[reg]);
+	    return *(word16 *)(regs_addr[reg]) = (word16)val;
 	case 'f':
 	    if(rel)
 		val += *(regs_addr[reg]);
