@@ -1,6 +1,6 @@
 /* CodeView/32 - TLDTViewer Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: ldt.cpp,v 1.1 2001/02/03 23:43:38 pete Exp $ */
+/* $Id: ldt.cpp,v 1.2 2001/04/27 06:20:27 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -16,10 +16,8 @@
 #define Uses_TWindow
 #include <tv.h>
 
+#include "debugger.h"
 #include "ldt.h"
-
-typedef unsigned short word16;
-typedef unsigned char word8;
 
 typedef struct GDT_S {
     word16 lim0;
