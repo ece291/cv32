@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.1 2001/02/02 17:02:43 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.2 2001/02/03 23:45:03 pete Exp $ */
  
 #include <string.h>
 
@@ -25,6 +25,7 @@
 
 #include "debugapp.h"
 #include "fileview.h"
+#include "ldt.h"
 #include "cvconst.h"
 
 int main(int argc, char **argv)
@@ -64,6 +65,8 @@ TDebugApp::TDebugApp(int argc, char **argv) :
 
 void TDebugApp::handleEvent(TEvent &event)
 {
+    TView *w;
+
     TApplication::handleEvent(event);
 
     if (event.what == evCommand) {
@@ -79,6 +82,12 @@ void TDebugApp::handleEvent(TEvent &event)
             case cmFileCmd:             //  View a file
                 openFile("*.*");
                 break;
+
+	    case cmLDTCmd:
+		w = validView(new TLDTWindow(TProgram::deskTop->getExtent()));
+		if(w != 0)
+		    deskTop->insert(w);
+		break;
 
             default:                    //  Unknown command
                 return;
