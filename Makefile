@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2001/02/03 23:44:15 pete Exp $
+# $Id: Makefile,v 1.8 2001/02/05 08:30:32 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR
 
@@ -22,6 +22,7 @@ EO_TV = \
 	cvhint.o\
 	fileview.o\
 	ldt.o\
+	numproc.o\
 	$E
 
 .c.o:
