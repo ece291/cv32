@@ -1,9 +1,10 @@
 /* CodeView/32 - TNumericProcessorViewer Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: numproc.cpp,v 1.4 2001/03/21 20:24:47 pete Exp $ */
+/* $Id: numproc.cpp,v 1.5 2001/03/22 03:07:06 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <debug/dbgcom.h>
 
 #define Uses_TKeys
@@ -18,6 +19,12 @@
 #define Uses_TProgram
 #define Uses_TDeskTop
 #define Uses_TPoint
+#define Uses_MsgBox
+#define Uses_TDialog
+#define Uses_TInputLine
+#define Uses_TButton
+#define Uses_TRadioButtons
+#define Uses_TSItem
 #include <tv.h>
 
 #include "numproc.h"
@@ -200,7 +207,138 @@ void TFPRegsViewer::handleEvent(TEvent &event)
 	    npx.reg[focused].sign = !npx.reg[focused].sign;
 	    break;
 	case Change:
+	    {
+	    static char textval[256];
+	    static unsigned int typeval = 0;
+
+	    // Build dialog box.  We build it ourselves instead of just
+	    // calling inputBox() because we want a selection box between
+	    // floating point and MMX values.
+	    TRect r(0, 0, 60, 8);
+	    r.move((TProgram::deskTop->size.x - r.b.x) / 2,
+		(TProgram::deskTop->size.y - r.b.y) / 2);
+
+	    TDialog *dialog = new TDialog(r, "Editing Numeric Processor value");
+
+	    r = TRect(9 + strlen("Floating Point"), 2, dialog->size.x - 3, 3);
+	    TInputLine *input = new TInputLine(r, 256);
+	    dialog->insert(input);
+
+	    r = TRect(2, 2, 8 + strlen("Floating Point"), 4);
+	    TRadioButtons *type = new TRadioButtons(r,
+		new TSItem("Floating Point", new TSItem("MMX (Hex)", 0)));
+	    dialog->insert(type);
+
+	    r = TRect(dialog->size.x - 24, dialog->size.y - 4,
+		dialog->size.x - 14, dialog->size.y - 2);
+	    dialog->insert(new TButton(r, "~O~K", cmOK, bfDefault));
+
+	    r.a.x += 12;
+	    r.b.x += 12;
+	    dialog->insert(new TButton(r, "Cancel", cmCancel, bfNormal));
+
+	    r.a.x += 12;
+	    r.b.x += 12;
+	    dialog->selectNext(False);
+
+	    input->setData(textval);
+	    type->setData(&typeval);
+
+	    if(TProgram::deskTop->execView(dialog) == cmOK) {
+		input->getData(textval);
+		type->getData(&typeval);
+
+		switch(typeval) {
+		    case 0:	// floating point
+			{
+			char *endp, *p;
+			long double d;
+
+			p = textval;
+			while (*p == ' ')
+			    p++;
+			if (*p == '\0')
+			    break;
+			strlwr (p);
+			if (strcmp (p, "+inf") == 0 ||
+			    strcmp (p, "inf") == 0 ||
+			    strcmp (p, "-inf") == 0) {
+			    tag = 2;
+			    npx.reg[focused].exponent = 0x7fff;
+			    npx.reg[focused].sig3 = 0x8000;
+			    npx.reg[focused].sig2 =
+				npx.reg[focused].sig1 =
+				npx.reg[focused].sig0 = 0;
+			    npx.reg[focused].sign = (*p == '-');
+			} else {
+			    d = _strtold (p, &endp);
+			    if (*p != '\0' && *endp)
+				messageBox("Expression not understood",
+				    mfError | mfOKButton);
+			    else {
+				tag = (d == 0.0);
+				*((long double *)(npx.reg + focused)) = d;
+				npx.reg[focused].sign = (*p == '-');
+			    }
+			}
+			break;
+			}
+		    case 1:	// MMX (hex)
+			{
+			bool valid = true;
+			unsigned long long val = 0;
+			char *p = textval;
+			int numdigits = 0;
+
+			while(*p != '\0') {
+			    switch(*p) {
+				case ' ':
+				    break;	// ignore spaces
+				case '0' ... '9':
+				    val <<= 4;
+				    val |= (unsigned long long)(*p-'0');
+				    numdigits++;
+				    break;
+				case 'a' ... 'f':
+				    val <<= 4;
+				    val |= (unsigned long long)(*p-'a'+10);
+				    numdigits++;
+				    break;
+				case 'A' ... 'F':
+				    val <<= 4;
+				    val |= (unsigned long long)(*p-'A'+10);
+				    numdigits++;
+				    break;
+				default:	// error on any other char
+				    valid = false;
+				    *(p+1) = '\0';
+				    break;
+			    }
+			    p++;
+			}
+			if(numdigits > 16) {
+			    messageBox("Too many digits",
+				mfError | mfOKButton);
+			} else if(!valid) {
+			    messageBox("Invalid character",
+				mfError | mfOKButton);
+			} else {
+			    tag = 0;
+			    npx.tag = 0;	// MMX write clears FP tag word
+			    npx.reg[focused].sign = 1;
+			    npx.reg[focused].exponent = 0x7fff;
+			    npx.reg[focused].sig3 = (val >> 48) & 0xffff;
+			    npx.reg[focused].sig2 = (val >> 32) & 0xffff;
+			    npx.reg[focused].sig1 = (val >> 16) & 0xffff;
+			    npx.reg[focused].sig0 = val & 0xffff;
+			}
+			break;
+			}
+		}
+	    }
+	    TObject::destroy(dialog);
 	    break;
+	    }
 	case Nothing:
 	    return;
     }
