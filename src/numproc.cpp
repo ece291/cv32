@@ -1,6 +1,6 @@
 /* CodeView/32 - TNumericProcessorWindow Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: numproc.cpp,v 1.6 2001/03/22 03:30:12 pete Exp $ */
+/* $Id: numproc.cpp,v 1.7 2001/03/22 06:31:52 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -670,29 +670,28 @@ TNumericProcessorWindow::TNumericProcessorWindow(const TRect &bounds) :
     TWindowInit(&TNumericProcessorWindow::initFrame)
 {
     TRect r(bounds);
-    TScrollBar *vs;
+    TScrollBar *vs1, *vs2;
     TFPRegsViewer *regsviewer;
 
     r.grow(-1, -1);
-    r.b.x -= 8+8;
+    r.b.x -= 6+4+1;
 
-    vs = new TScrollBar(TRect(r.b.x-1, r.a.y, r.b.x, r.b.y));
-    insert(vs);
+    vs1 = new TScrollBar(TRect(r.b.x-1, r.a.y, r.b.x, r.b.y));
 
     r.b.x--;
     regsviewer = new TFPRegsViewer(TRect(r), 0, 0);
     insert(regsviewer);
 
-    r.a.x = r.b.x+1;
-    r.b.x = r.a.x+8;
+    r.a.x = r.b.x;
+    r.b.x = r.a.x+6;
 
-    vs = new TScrollBar(TRect(r.b.x-1, r.a.y, r.b.x, r.b.y));
-    insert(vs);
+    vs2 = new TScrollBar(TRect(r.b.x-1, r.a.y, r.b.x, r.b.y));
 
     r.b.x--;
     insert(new TFPFlagsViewer(TRect(r), 0, 0, TFPFlagsViewer::ControlFlags));
+    insert(vs1);
 
-    r.a.x = r.b.x+1;
+    r.a.x = r.b.x;
     r.b.x = size.x;
 
 //    vs = new TScrollBar(TRect(r.b.x-1, r.a.y, r.b.x, r.b.y));
@@ -700,6 +699,7 @@ TNumericProcessorWindow::TNumericProcessorWindow(const TRect &bounds) :
 
     r.b.x--;
     insert(new TFPFlagsViewer(TRect(r), 0, 0, TFPFlagsViewer::StatusFlags));
+    insert(vs2);
 
     regsviewer->select();
 }
