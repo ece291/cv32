@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.10 2001/04/27 06:19:53 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.11 2001/04/28 21:37:34 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -28,6 +28,7 @@
 #include <tv.h>
 
 #include "debugger.h"
+#include "disassembler.h"
 #include "debugapp.h"
 #include "fileview.h"
 #include "ldt.h"
@@ -36,6 +37,7 @@
 #include "cvconst.h"
 
 Debugger *debugger;
+Disassembler *disassembler;
 
 int main(int argc, char **argv)
 {
@@ -87,6 +89,7 @@ int main(int argc, char **argv)
     edi_init(start_state);
 
     debugger = new Debugger();
+    disassembler = new Disassembler();
 
     TDebugApp *debugProgram = new TDebugApp(argc, argv);
 
@@ -94,11 +97,16 @@ int main(int argc, char **argv)
 
     TObject::destroy(debugProgram);
 
+    delete disassembler;
     delete debugger;
 
     return 0;
 }
 
+extern "C" int valid_addr(word32 vaddr, int len)
+{
+    return (int)debugger->IsValidAddr(vaddr, len);
+}
 
 TDebugApp::TDebugApp(int argc, char **argv) :
     TProgInit(&TDebugApp::initStatusLine, &TDebugApp::initMenuBar,
