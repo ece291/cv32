@@ -1,8 +1,8 @@
-# $Id: Makefile,v 1.20 2001/04/28 21:40:11 pete Exp $
+# $Id: Makefile,v 1.21 2001/12/12 07:31:23 pete Exp $
 
-CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
+CFLAGS = -march=pentiumpro -O2 -Wall -DFULLSCR -Iinclude
 
-CPPFLAGS = -fno-exceptions -fno-rtti -O2 -Wall -Iinclude
+CPPFLAGS = -march=pentiumpro -fno-exceptions -fno-rtti -O2 -Wall -Iinclude
 
 EO = \
 	ed.o\
@@ -34,18 +34,19 @@ EO_TV = \
 	$E
 LINK_EO_TV = $(addprefix obj/, $(EO_TV))
 
-cv32objs: $(LINK_EO)
+all : cv32.exe cv32tv.exe
 
 cv32.exe : $(LINK_EO)
 	gcc -o $@ $(LINK_EO) -ldbg
-
-cv32tvobjs: $(LINK_EO_TV)
 
 cv32tv.exe : $(LINK_EO_TV)
 	gcc -o $@ $(LINK_EO_TV) -ldbg -lrhtv -lstdcxx
 
 obj/%.o : src/%.c
 	gcc $(CFLAGS) -c $< -o $@
+
+src/%.c : src/%.y
+	bison -o $@ $<
 
 obj/%.o : src/%.cpp
 	gpp $(CPPFLAGS) -c $< -o $@
@@ -61,14 +62,14 @@ tests/%.exe : obj/%.o
 	gcc -o $@ $<
 
 clean :
-	-rm -f obj/*.o
-	-rm -f cv32.exe
-	-rm -f cv32tv.exe
+	-del obj\*.o
+	-del cv32.exe
+	-del cv32tv.exe
 
 veryclean : clean
-	-rm -f obj/nasm/*.o
-	-rm -f src/expr.c
-	-rm -f tests/*.exe
+	-del obj\nasm\*.o
+	-del src\expr.c
+	-del tests\*.exe
 
 # DEPENDENCIES
 
