@@ -1,0 +1,4 @@
+expr.c 
+fsdb* 
+*.sw* 
+*.o 
