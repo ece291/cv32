@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.9 2001/04/26 18:16:05 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.10 2001/04/27 06:19:53 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -27,12 +27,15 @@
 
 #include <tv.h>
 
+#include "debugger.h"
 #include "debugapp.h"
 #include "fileview.h"
 #include "ldt.h"
 #include "numproc.h"
 #include "register.h"
 #include "cvconst.h"
+
+Debugger *debugger;
 
 int main(int argc, char **argv)
 {
@@ -41,6 +44,7 @@ int main(int argc, char **argv)
     char *name = argv[1];
     char temp[256];
     FILE *f;
+    int i;
 
     if(argc == 1) {
 	fprintf(stderr, "Usage: %s debug-image\n", argv[0]);
@@ -66,8 +70,15 @@ int main(int argc, char **argv)
 
     syms_init(name);
 
-    cmdline[1] = 13;
-    cmdline[0] = 0;
+    // build command line
+    cmdline[1] = 0;
+    for(i=2; argv[i]; i++) {
+	strcat(cmdline+1, " ");
+	strcat(cmdline+1, argv[i]);
+    }
+    i = strlen(cmdline+1);
+    cmdline[0] = i;
+    cmdline[i+1] = 13;
     if(v2loadimage(name, cmdline, start_state)) {
 	fprintf(stderr, "Load failed for image %s\n", argv[1]);
 	exit(1);
@@ -75,11 +86,16 @@ int main(int argc, char **argv)
 
     edi_init(start_state);
 
+    debugger = new Debugger();
+
     TDebugApp *debugProgram = new TDebugApp(argc, argv);
 
     debugProgram->run();
 
     TObject::destroy(debugProgram);
+
+    delete debugger;
+
     return 0;
 }
 
