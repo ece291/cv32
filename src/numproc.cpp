@@ -1,6 +1,6 @@
 /* CodeView/32 - TNumericProcessorWindow Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: numproc.cpp,v 1.7 2001/03/22 06:31:52 pete Exp $ */
+/* $Id: numproc.cpp,v 1.8 2001/03/22 19:57:06 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -28,24 +28,7 @@
 #include <tv.h>
 
 #include "numproc.h"
-
-const int cmFPRegsChangeCmd = 1101;
-const int cmFPRegsNegateCmd = 1102;
-const int cmFPRegsZeroCmd = 1103;
-const int cmFPRegsEmptyCmd = 1104;
-const int cmFPFlagsNextCmd = 1201;
-const int cmFPFlagsToggleCmd = 1202;
-const int cmFPFlagsSetCmd = 1203;
-const int cmFPFlagsResetCmd = 1204;
-
-const int hcFPRegsChangeCmd = 1101;
-const int hcFPRegsNegateCmd = 1102;
-const int hcFPRegsZeroCmd = 1103;
-const int hcFPRegsEmptyCmd = 1104;
-const int hcFPFlagsNextCmd = 1201;
-const int hcFPFlagsToggleCmd = 1202;
-const int hcFPFlagsSetCmd = 1203;
-const int hcFPFlagsResetCmd = 1204;
+#include "cvconst.h"
 
 class TFPRegsViewer : public TListViewer
 {

@@ -1,6 +1,6 @@
 /* CodeView/32 - Constants for commands, help/hints */
 /* Copyright (c) 2001 by Peter Johnson */
-/* $Id: cvconst.h,v 1.2 2001/03/22 19:51:59 pete Exp $ */
+/* $Id: cvconst.h,v 1.3 2001/03/22 19:57:06 pete Exp $ */
 
 const int cmRepaintDesktopCmd	= 101;
 const int cmAboutCmd		= 102;
@@ -39,6 +39,24 @@ const int cmAddWatchCmd		= 506;
 const int cmDisplayOptionsCmd	= 601;
 const int cmPathForSourceCmd	= 602;
 const int cmUserScreenCmd	= 701;
+// TNumericProcessorWindow:
+const int cmFPRegsChangeCmd = 1101;
+const int cmFPRegsNegateCmd = 1102;
+const int cmFPRegsZeroCmd = 1103;
+const int cmFPRegsEmptyCmd = 1104;
+const int cmFPFlagsNextCmd = 1201;
+const int cmFPFlagsToggleCmd = 1202;
+const int cmFPFlagsSetCmd = 1203;
+const int cmFPFlagsResetCmd = 1204;
+// TRegistersWindow:
+const int cmRegsChangeCmd = 1301;
+const int cmRegsIncrementCmd = 1302;
+const int cmRegsDecrementCmd = 1303;
+const int cmRegsNegateCmd = 1304;
+const int cmRegsZeroCmd = 1305;
+const int cmFlagsToggleCmd = 1401;
+const int cmFlagsSetCmd = 1402;
+const int cmFlagsResetCmd = 1403;
 
 const int hcQuit		= 91;
 const int hcZoom		= 92;
@@ -82,4 +100,22 @@ const int hcAddWatchCmd		= 506;
 const int hcDisplayOptionsCmd	= 601;
 const int hcPathForSourceCmd	= 602;
 const int hcUserScreenCmd	= 701;
+// TNumericProcessorWindow:
+const int hcFPRegsChangeCmd = 1101;
+const int hcFPRegsNegateCmd = 1102;
+const int hcFPRegsZeroCmd = 1103;
+const int hcFPRegsEmptyCmd = 1104;
+const int hcFPFlagsNextCmd = 1201;
+const int hcFPFlagsToggleCmd = 1202;
+const int hcFPFlagsSetCmd = 1203;
+const int hcFPFlagsResetCmd = 1204;
+// TRegistersWindow:
+const int hcRegsChangeCmd = 1301;
+const int hcRegsIncrementCmd = 1302;
+const int hcRegsDecrementCmd = 1303;
+const int hcRegsNegateCmd = 1304;
+const int hcRegsZeroCmd = 1305;
+const int hcFlagsToggleCmd = 1401;
+const int hcFlagsSetCmd = 1402;
+const int hcFlagsResetCmd = 1403;
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001/03/22 19:51:11 pete Exp $
+# $Id: Makefile,v 1.12 2001/03/22 19:57:06 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR
 
@@ -77,6 +77,6 @@ cvstatus.o: debugapp.h cvhint.h hintstat.h cvconst.h
 cvhint.o: cvhint.h cvconst.h
 fileview.o: fileview.h cvconst.h
 ldt.o: ldt.h
-numproc.o: numproc.h
-register.o: register.h
+numproc.o: numproc.h cvconst.h
+register.o: register.h cvconst.h
 

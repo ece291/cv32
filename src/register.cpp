@@ -1,6 +1,6 @@
 /* CodeView/32 - TRegistersWindow Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: register.cpp,v 1.1 2001/03/22 06:14:03 pete Exp $ */
+/* $Id: register.cpp,v 1.2 2001/03/22 19:57:06 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -22,24 +22,7 @@
 #include <tv.h>
 
 #include "register.h"
-
-const int cmRegsChangeCmd = 1301;
-const int cmRegsIncrementCmd = 1302;
-const int cmRegsDecrementCmd = 1303;
-const int cmRegsNegateCmd = 1304;
-const int cmRegsZeroCmd = 1305;
-const int cmFlagsToggleCmd = 1401;
-const int cmFlagsSetCmd = 1402;
-const int cmFlagsResetCmd = 1403;
-
-const int hcRegsChangeCmd = 1301;
-const int hcRegsIncrementCmd = 1302;
-const int hcRegsDecrementCmd = 1303;
-const int hcRegsNegateCmd = 1304;
-const int hcRegsZeroCmd = 1305;
-const int hcFlagsToggleCmd = 1401;
-const int hcFlagsSetCmd = 1402;
-const int hcFlagsResetCmd = 1403;
+#include "cvconst.h"
 
 class TRegsViewer : public TListViewer
 {
