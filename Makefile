@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.13 2001/04/22 22:13:45 pete Exp $
+# $Id: Makefile,v 1.14 2001/04/22 22:20:32 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
 
@@ -30,15 +30,15 @@ LINK_EO_TV = $(addprefix obj/, $(EO_TV))
 
 all : cv32.exe cv32tv.exe
 
-cv32.exe : $(LINK_EO)
-	echo $(LINK_EO) > .files
-	gcc -v -o $@ @.files -ldbg
-	-rm -f .files
+cv32objs: $(LINK_EO)
 
-cv32tv.exe : $(LINK_EO_TV)
-	echo $(LINK_EO_TV) > .files
-	gcc -o $@ @.files -ldbg -lrhtv -lstdcxx
-	-rm -f .files
+cv32.exe : cv32objs
+	gcc -v -o $@ $(LINK_EO) -ldbg
+
+cv32tvobjs: $(LINK_EO_TV)
+
+cv32tv.exe : cv32tvobjs
+	gcc -o $@ $(LINK_EO_TV) -ldbg -lrhtv -lstdcxx
 
 obj/%.o : src/%.c
 	gcc $(CFLAGS) -c $< -o $@
@@ -46,7 +46,7 @@ obj/%.o : src/%.c
 obj/%.o : src/%.cpp
 	gpp $(CPPFLAGS) -c $< -o $@
 
-.PHONY: clean veryclean
+.PHONY: clean veryclean cv32objs cv32tvobjs
 
 clean :
 	-rm -f obj/*.o
