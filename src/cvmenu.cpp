@@ -1,6 +1,6 @@
 /* CodeView/32 - Menu Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: cvmenu.cpp,v 1.1 2001/02/02 17:02:43 pete Exp $ */
+/* $Id: cvmenu.cpp,v 1.2 2001/03/22 19:51:59 pete Exp $ */
  
 #define Uses_TRect
 #define Uses_TMenuBar
@@ -41,6 +41,7 @@ TMenuBar *TDebugApp::initMenuBar(TRect r)
 	*new TMenuItem("~V~ariables", cmVariablesCmd, kbNoKey, hcVariablesCmd) +
 	*new TMenuItem("~M~odule...", cmModuleCmd, kbF3, hcModuleCmd, "F3") +
 	*new TMenuItem("~F~ile...", cmFileCmd, kbNoKey, hcFileCmd) +
+	*new TMenuItem("~D~isassembly", cmDisassemblyCmd, kbNoKey, hcDisassemblyCmd) +
 	*new TMenuItem("~L~DT", cmLDTCmd, kbNoKey, hcLDTCmd) +
 	*new TMenuItem("~D~ump", cmDumpCmd, kbNoKey, hcDumpCmd) +
 	*new TMenuItem("~R~egisters", cmRegistersCmd, kbNoKey, hcRegistersCmd) +

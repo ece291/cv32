@@ -1,6 +1,6 @@
 /* CodeView/32 - Constants for commands, help/hints */
 /* Copyright (c) 2001 by Peter Johnson */
-/* $Id: cvconst.h,v 1.1 2001/02/02 17:02:43 pete Exp $ */
+/* $Id: cvconst.h,v 1.2 2001/03/22 19:51:59 pete Exp $ */
 
 const int cmRepaintDesktopCmd	= 101;
 const int cmAboutCmd		= 102;
@@ -14,13 +14,14 @@ const int cmWatchesCmd		= 304;
 const int cmVariablesCmd	= 305;
 const int cmModuleCmd		= 306;
 const int cmFileCmd		= 307;
-const int cmLDTCmd		= 308;
-const int cmDumpCmd		= 309;
-const int cmRegistersCmd	= 310;
-const int cmNumericProcessorCmd	= 311;
-const int cmAnotherModuleCmd	= 312;
-const int cmAnotherDumpCmd	= 313;
-const int cmAnotherFileCmd	= 314;
+const int cmDisassemblyCmd	= 308;
+const int cmLDTCmd		= 309;
+const int cmDumpCmd		= 310;
+const int cmRegistersCmd	= 311;
+const int cmNumericProcessorCmd	= 312;
+const int cmAnotherModuleCmd	= 313;
+const int cmAnotherDumpCmd	= 314;
+const int cmAnotherFileCmd	= 315;
 const int cmRunCmd		= 401;
 const int cmGoToCursorCmd	= 402;
 const int cmTraceIntoCmd	= 403;
@@ -56,13 +57,14 @@ const int hcWatchesCmd		= 304;
 const int hcVariablesCmd	= 305;
 const int hcModuleCmd		= 306;
 const int hcFileCmd		= 307;
-const int hcLDTCmd		= 308;
-const int hcDumpCmd		= 309;
-const int hcRegistersCmd	= 310;
-const int hcNumericProcessorCmd	= 311;
-const int hcAnotherModuleCmd	= 312;
-const int hcAnotherDumpCmd	= 313;
-const int hcAnotherFileCmd	= 314;
+const int hcDisassemblyCmd	= 308;
+const int hcLDTCmd		= 309;
+const int hcDumpCmd		= 310;
+const int hcRegistersCmd	= 311;
+const int hcNumericProcessorCmd	= 312;
+const int hcAnotherModuleCmd	= 313;
+const int hcAnotherDumpCmd	= 314;
+const int hcAnotherFileCmd	= 315;
 const int hcRunCmd		= 401;
 const int hcGoToCursorCmd	= 402;
 const int hcTraceIntoCmd	= 403;
