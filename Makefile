@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2001/03/22 06:14:22 pete Exp $
+# $Id: Makefile,v 1.11 2001/03/22 19:51:11 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR
 
@@ -26,55 +26,57 @@ EO_TV = \
 	register.o\
 	$E
 
-.c.o:
-	gcc $(CFLAGS) -o $*.o -c $*.c
-
-.cpp.o:
-	gpp $(CPPFLAGS) -o $*.o -c $*.cpp
-
 all : cv32.exe cv32tv.exe
 
-cv32 : $(EO) 
-	gcc -v -o cv32 $(EO) -ldbg
-
-cv32.exe : cv32
-	stubify cv32
+cv32 : $(EO)
+	echo $(EO) > .files
+	gcc -v -o cv32 @.files -ldbg
+	-rm -f .files
 
 cv32tv : $(EO_TV)
-	gcc -o cv32tv $(EO_TV) -ldbg -lrhtv -lstdcxx
+	echo $(EO_TV) > .files
+	gcc -o cv32tv @.files -ldbg -lrhtv -lstdcxx
+	-rm -f .files
 
-cv32tv.exe : cv32tv
-	stubify cv32tv
+%.o : %.c
+	gcc $(CFLAGS) -c $< -o $@
+
+%.o : %.cpp
+	gpp $(CPPFLAGS) -c $< -o $@
+
+%.exe : %
+	stubify $<
+
+.PHONY: clean veryclean
 
 clean :
-	-del *.o
-	-del cv32
-	-del cv32.exe
-	-del cv32tv
-	-del cv32tv.exe
+	-rm -f *.o
+	-rm -f cv32 cv32.exe
+	-rm -f cv32tv cv32tv.exe
 
 veryclean : clean
-	-del nasm\*.o
-	-del expr.c
+	-rm -f nasm\*.o
+	-rm -f expr.c
 
 # DEPENDENCIES
 
 unassmbl.o : ed.h unassmbl.h
-
 fullscr.o: ed.h unassmbl.h screen.h
-
 screen.o: ed.h screen.h
-
 expr.c: ed.h 
-
 ed.o: ed.h debug.h 
-
 nasm/disasm.o: nasm/nasm.h nasm/disasm.h nasm/sync.h nasm/insns.h nasm/names.c
-
 nasm/insnsd.o: nasm/nasm.h nasm/insns.h
-
 nasm/sync.o: nasm/sync.h
-
 nasm/names.c: nasm/insnsn.c
-
 nasm/nasm.h: nasm/insnsi.h
+
+debugapp.o: debugapp.h fileview.h ldt.h numproc.h register.h cvconst.h
+cvmenu.o: debugapp.h cvconst.h
+cvstatus.o: debugapp.h cvhint.h hintstat.h cvconst.h
+cvhint.o: cvhint.h cvconst.h
+fileview.o: fileview.h cvconst.h
+ldt.o: ldt.h
+numproc.o: numproc.h
+register.o: register.h
+
