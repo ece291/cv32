@@ -1,6 +1,6 @@
 /* CodeView/32 - Debugger Header File */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugger.h,v 1.1 2001/04/27 06:18:39 pete Exp $ */
+/* $Id: debugger.h,v 1.2 2001/04/27 18:27:12 pete Exp $ */
 #ifndef _DEBUGGER_H_
 #define _DEBUGGER_H_
 
@@ -23,6 +23,7 @@ public:
     word32 main_entry;
 
     Debugger();
+    ~Debugger();
 
     // Memory functions
     bool IsValidAddr(word32 vaddr, int len)
