@@ -1,8 +1,8 @@
-# $Id: Makefile,v 1.12 2001/03/22 19:57:06 pete Exp $
+# $Id: Makefile,v 1.13 2001/04/22 22:13:45 pete Exp $
 
-CFLAGS = -O2 -Wall -DFULLSCR
+CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
 
-CPPFLAGS = -fno-exceptions -fno-rtti -O2 -Wall
+CPPFLAGS = -fno-exceptions -fno-rtti -O2 -Wall -Iinclude
 
 EO = \
 	ed.o\
@@ -14,6 +14,7 @@ EO = \
 	nasm/insnsd.o\
 	nasm/sync.o\
 	$E
+LINK_EO = $(addprefix obj/, $(EO))
 
 EO_TV = \
 	debugapp.o\
@@ -25,58 +26,59 @@ EO_TV = \
 	numproc.o\
 	register.o\
 	$E
+LINK_EO_TV = $(addprefix obj/, $(EO_TV))
 
 all : cv32.exe cv32tv.exe
 
-cv32 : $(EO)
-	echo $(EO) > .files
-	gcc -v -o cv32 @.files -ldbg
+cv32.exe : $(LINK_EO)
+	echo $(LINK_EO) > .files
+	gcc -v -o $@ @.files -ldbg
 	-rm -f .files
 
-cv32tv : $(EO_TV)
-	echo $(EO_TV) > .files
-	gcc -o cv32tv @.files -ldbg -lrhtv -lstdcxx
+cv32tv.exe : $(LINK_EO_TV)
+	echo $(LINK_EO_TV) > .files
+	gcc -o $@ @.files -ldbg -lrhtv -lstdcxx
 	-rm -f .files
 
-%.o : %.c
+obj/%.o : src/%.c
 	gcc $(CFLAGS) -c $< -o $@
 
-%.o : %.cpp
+obj/%.o : src/%.cpp
 	gpp $(CPPFLAGS) -c $< -o $@
-
-%.exe : %
-	stubify $<
 
 .PHONY: clean veryclean
 
 clean :
-	-rm -f *.o
-	-rm -f cv32 cv32.exe
-	-rm -f cv32tv cv32tv.exe
+	-rm -f obj/*.o
+	-rm -f cv32.exe
+	-rm -f cv32tv.exe
 
 veryclean : clean
-	-rm -f nasm\*.o
-	-rm -f expr.c
+	-rm -f obj/nasm/*.o
+	-rm -f src/expr.c
 
 # DEPENDENCIES
 
-unassmbl.o : ed.h unassmbl.h
-fullscr.o: ed.h unassmbl.h screen.h
-screen.o: ed.h screen.h
-expr.c: ed.h 
-ed.o: ed.h debug.h 
-nasm/disasm.o: nasm/nasm.h nasm/disasm.h nasm/sync.h nasm/insns.h nasm/names.c
-nasm/insnsd.o: nasm/nasm.h nasm/insns.h
-nasm/sync.o: nasm/sync.h
-nasm/names.c: nasm/insnsn.c
-nasm/nasm.h: nasm/insnsi.h
+obj/unassmbl.o : include/ed.h include/unassmbl.h
+obj/fullscr.o: include/ed.h include/unassmbl.h include/screen.h
+obj/screen.o: include/ed.h include/screen.h
+src/expr.c: include/ed.h 
+obj/ed.o: include/ed.h include/debug.h 
+obj/nasm/disasm.o: src/nasm/nasm.h src/nasm/disasm.h src/nasm/sync.h \
+	src/nasm/insns.h src/nasm/names.c
+obj/nasm/insnsd.o: src/nasm/nasm.h src/nasm/insns.h
+obj/nasm/sync.o: src/nasm/sync.h
+src/nasm/names.c: src/nasm/insnsn.c
+src/nasm/nasm.h: src/nasm/insnsi.h
 
-debugapp.o: debugapp.h fileview.h ldt.h numproc.h register.h cvconst.h
-cvmenu.o: debugapp.h cvconst.h
-cvstatus.o: debugapp.h cvhint.h hintstat.h cvconst.h
-cvhint.o: cvhint.h cvconst.h
-fileview.o: fileview.h cvconst.h
-ldt.o: ldt.h
-numproc.o: numproc.h cvconst.h
-register.o: register.h cvconst.h
+obj/debugapp.o: include/debugapp.h include/fileview.h include/ldt.h \
+	include/numproc.h include/register.h include/cvconst.h
+obj/cvmenu.o: include/debugapp.h include/cvconst.h
+obj/cvstatus.o: include/debugapp.h include/cvhint.h include/hintstat.h \
+	include/cvconst.h
+obj/cvhint.o: include/cvhint.h include/cvconst.h
+obj/fileview.o: include/fileview.h include/cvconst.h
+obj/ldt.o: include/ldt.h
+obj/numproc.o: include/numproc.h include/cvconst.h
+obj/register.o: include/register.h include/cvconst.h
 
