@@ -1,8 +1,12 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.2 2001/02/03 23:45:03 pete Exp $ */
- 
+/* $Id: debugapp.cpp,v 1.3 2001/02/04 20:54:27 pete Exp $ */
+
+#include <stdio.h>
 #include <string.h>
+#include <debug/dbgcom.h>
+#include <debug/v2load.h>
+#include <debug/syms.h>
 
 #define Uses_TView
 #define Uses_TRect
@@ -30,6 +34,25 @@
 
 int main(int argc, char **argv)
 {
+    jmp_buf start_state;
+    char cmdline[128];
+
+    if(argc == 1) {
+	fprintf(stderr, "Usage: %s debug-image\n", argv[0]);
+	exit(1);
+    }
+
+    syms_init(argv[1]);
+
+    cmdline[1] = 13;
+    cmdline[0] = 0;
+    if(v2loadimage(argv[1], cmdline, start_state)) {
+	printf("Load failed for image %s\n", argv[1]);
+	exit(1);
+    }
+
+    edi_init(start_state);
+
     TDebugApp *debugProgram = new TDebugApp(argc, argv);
 
     debugProgram->run();
@@ -43,24 +66,6 @@ TDebugApp::TDebugApp(int argc, char **argv) :
     TProgInit(&TDebugApp::initStatusLine, &TDebugApp::initMenuBar,
 	&TDebugApp::initDeskTop)
 {
-    char fileSpec[128];
-    int len;
-
-    while(--argc > 0) {
-        strcpy( fileSpec, *++argv );
-        len = strlen( fileSpec );
-
-        if(fileSpec[len-1] == '/')
-            strcat(fileSpec, "*.*");
-        if(strchr(fileSpec, '*') || strchr(fileSpec, '?'))
-            openFile(fileSpec);
-        else {
-	    TView *w;
-            w = validView(new TFileWindow(fileSpec));
-            if(w != 0)
-                deskTop->insert(w);
-        }
-    }
 }
 
 void TDebugApp::handleEvent(TEvent &event)
