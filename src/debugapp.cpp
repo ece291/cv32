@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.7 2001/03/21 20:50:48 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.8 2001/03/22 06:14:22 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -31,6 +31,7 @@
 #include "fileview.h"
 #include "ldt.h"
 #include "numproc.h"
+#include "register.h"
 #include "cvconst.h"
 
 int main(int argc, char **argv)
@@ -105,6 +106,16 @@ void TDebugApp::handleEvent(TEvent &event)
 		w = validView(new TNumericProcessorWindow(TRect(r)));
 		if(w != 0) {
 		    r.a.y = r.b.y - 10;
+		    w->changeBounds(r);
+		    deskTop->insert(w);
+		}
+		break;
+
+	    case cmRegistersCmd:
+		w = validView(new TRegistersWindow(TRect(r)));
+		if(w != 0) {
+		    r.a.x = r.b.x - 19;
+		    r.a.y = r.b.y - 18;
 		    w->changeBounds(r);
 		    deskTop->insert(w);
 		}
