@@ -1,6 +1,6 @@
 /* CodeView/32 - TNumericProcessorViewer Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: numproc.cpp,v 1.3 2001/03/21 03:51:59 pete Exp $ */
+/* $Id: numproc.cpp,v 1.4 2001/03/21 20:24:47 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -26,11 +26,19 @@ const int cmFPRegsChangeCmd = 1101;
 const int cmFPRegsNegateCmd = 1102;
 const int cmFPRegsZeroCmd = 1103;
 const int cmFPRegsEmptyCmd = 1104;
+const int cmFPFlagsNextCmd = 1201;
+const int cmFPFlagsToggleCmd = 1202;
+const int cmFPFlagsSetCmd = 1203;
+const int cmFPFlagsResetCmd = 1204;
 
 const int hcFPRegsChangeCmd = 1101;
 const int hcFPRegsNegateCmd = 1102;
 const int hcFPRegsZeroCmd = 1103;
 const int hcFPRegsEmptyCmd = 1104;
+const int hcFPFlagsNextCmd = 1201;
+const int hcFPFlagsToggleCmd = 1202;
+const int hcFPFlagsSetCmd = 1203;
+const int hcFPFlagsResetCmd = 1204;
 
 class TFPRegsViewer : public TListViewer
 {
@@ -168,8 +176,12 @@ void TFPRegsViewer::handleEvent(TEvent &event)
 		case cmFPRegsEmptyCmd:
 		    action = Empty;
 		    break;
+		default:
+		    return;
 	    }
 	    break;
+	default:
+	    return;
     }
 
     int rotreg = (focused + (npx.status >> 11)) & 7;
@@ -252,6 +264,8 @@ public:
 
 private:
     FlagsType type;
+
+    void Popup(TPoint p);
 };
 
 TFPFlagsViewer::TFPFlagsViewer(const TRect &bounds, TScrollBar *aHScrollBar,
@@ -351,39 +365,26 @@ void TFPFlagsViewer::getText(char *dest, ccIndex item, short maxLen)
 
 void TFPFlagsViewer::handleEvent(TEvent &event)
 {
+    TEvent savedEvent(event);
+    enum { Nothing, Next, Toggle, Set, Reset } action = Nothing;
+
     TListViewer::handleEvent(event);
 
-    if(event.what == evKeyDown) {
-	unsigned long *flags = 0;
-
-	switch(type) {
-	    case ControlFlags:
-		flags = &npx.control;
-		break;
-	    case StatusFlags:
-		flags = &npx.status;
-		break;
+    if(savedEvent.what == evMouseDown) {
+	if(savedEvent.mouse.buttons & mbRightButton) {
+	    Popup(savedEvent.mouse.where);
+	    return;
 	}
-
-	if(type == ControlFlags && focused == 6) {
-	    int val;
+    } else switch(event.what) {
+	case evKeyDown:
 	    switch(event.keyDown.keyCode) {
 		case kbEnter:
-		    val = (*flags >> 10) & 3;
-		    val = (val+1) & 3;
-		    *flags &= ~(3 << 10);
-		    *flags |= val << 10;
-		    break;
-		default:
-		    return;
-	    }
-	} else if(focused >= 0 && focused <= 6) {
-	    enum { Nothing, Toggle, Set, Unset } action = Nothing;
-	    static char flagpos[] = {5, 4, 3, 2, 1, 0, 6};
-
-	    switch(event.keyDown.keyCode) {
-		case kbEnter:
-		    action = Toggle;
+		    if(type == ControlFlags && focused == 6)
+			action = Next;
+		    else if(focused <= 6)
+			action = Toggle;
+		    else
+			return;
 		    break;
 		default:
 		    switch(event.keyDown.charScan.charCode) {
@@ -401,41 +402,128 @@ void TFPFlagsViewer::handleEvent(TEvent &event)
 			case '0':
 			case 'r':
 			case 'R':
-			    action = Unset;
+			    action = Reset;
 			    break;
 			default:
 			    return;
 		    }
+		    break;
 	    }
-
-	    switch(action) {
-		case Toggle:
-		    *flags ^= 1 << flagpos[focused];
+	    break;
+	case evCommand:
+	    switch(event.message.command) {
+		case cmFPFlagsNextCmd:
+		    action = Next;
 		    break;
-		case Set:
-		    if(type == StatusFlags)
-			*flags &= ~(1 << flagpos[focused]);
-		    else
-			*flags |= 1 << flagpos[focused];
+		case cmFPFlagsToggleCmd:
+		    action = Toggle;
 		    break;
-		case Unset:
-		    if(type == StatusFlags)
-			*flags |= 1 << flagpos[focused];
-		    else
-			*flags &= ~(1 << flagpos[focused]);
+		case cmFPFlagsSetCmd:
+		    action = Set;
 		    break;
-		case Nothing:
+		case cmFPFlagsResetCmd:
+		    action = Reset;
+		    break;
+		default:
 		    return;
 	    }
-	} else {
+	    break;
+	default:
 	    return;
-	}
-
-	draw();
-	clearEvent(event);
     }
 
+    unsigned long *flags = 0;
+    static char flagpos[] = {5, 4, 3, 2, 1, 0, 6};
+
+    switch(type) {
+	case ControlFlags:
+	    flags = &npx.control;
+	    break;
+	case StatusFlags:
+	    flags = &npx.status;
+	    break;
+    }
+
+    switch(action) {
+	case Next:
+	    {
+	    int val;
+	    val = (*flags >> 10) & 3;
+	    val = (val+1) & 3;
+	    *flags &= ~(3 << 10);
+	    *flags |= val << 10;
+	    break;
+	    }
+	case Toggle:
+	    *flags ^= 1 << flagpos[focused];
+	    break;
+	case Set:
+	    if(type == StatusFlags)
+		*flags &= ~(1 << flagpos[focused]);
+	    else
+		*flags |= 1 << flagpos[focused];
+	    break;
+	case Reset:
+	    if(type == StatusFlags)
+		*flags |= 1 << flagpos[focused];
+	    else
+		*flags &= ~(1 << flagpos[focused]);
+	    break;
+	case Nothing:
+	    return;
+    }
+
+    draw();
+    clearEvent(event);
 }
+
+void TFPFlagsViewer::Popup(TPoint p)
+{
+    TMenuItem *items;
+
+    if(type == ControlFlags && focused == 6)
+	items = new TMenuItem("~N~ext", cmFPFlagsNextCmd, kbEnter, hcFPFlagsNextCmd, "Enter");
+    else if(focused <= 6)
+	items = new TMenuItem("~T~oggle", cmFPFlagsToggleCmd, kbEnter, hcFPFlagsToggleCmd, "Enter");
+    else
+	return;
+
+    items->append(
+	new TMenuItem("~S~et", cmFPFlagsSetCmd, 0, hcFPFlagsSetCmd, "S",
+	new TMenuItem("~R~eset", cmFPFlagsResetCmd, 0, hcFPFlagsResetCmd, "R"
+    )));
+
+    TMenu *theMenu = new TMenu(*items);
+
+    TMenuBox *popup = new TMenuBox(TRect(0, 0, 0, 0), theMenu, 0);
+
+    // make sure it doesn't go off the screen
+    TRect rp = popup->getExtent();
+    TRect rd = TProgram::deskTop->getExtent();
+    if(p.x+rp.b.x > rd.b.x)
+	p.x = rd.b.x - rp.b.x;
+    if(p.y+rp.b.y > rd.b.y)
+	p.y = rd.b.y - rp.b.y;
+    popup->moveTo(p.x, p.y);
+
+    int result = 0;
+    if(TProgram::application->validView(popup)) {
+	result = TProgram::deskTop->execView(popup);
+	destroy(popup);
+    }
+
+    delete theMenu;
+
+    // Create an event
+    if(result) {
+	TEvent event;
+	event.what = evCommand;
+	event.message.command = result;
+	putEvent(event);
+	clearEvent(event);
+    }
+}
+
 
 static short winNumber = 0;
 
