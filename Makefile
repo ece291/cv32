@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2001/04/27 06:25:09 pete Exp $
+# $Id: Makefile,v 1.18 2001/04/27 06:27:23 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
 
@@ -81,13 +81,14 @@ src/nasm/nasm.h: src/nasm/insnsi.h
 
 obj/debugapp.o: include/debugapp.h include/fileview.h include/ldt.h \
 	include/numproc.h include/register.h include/cvconst.h
+	include/debugger.h
 obj/debugger.o: include/debugger.h
 obj/cvmenu.o: include/debugapp.h include/cvconst.h
 obj/cvstatus.o: include/debugapp.h include/cvhint.h include/hintstat.h \
 	include/cvconst.h
 obj/cvhint.o: include/cvhint.h include/cvconst.h
 obj/fileview.o: include/fileview.h include/cvconst.h
-obj/ldt.o: include/ldt.h
+obj/ldt.o: include/ldt.h include/debugger.h
 obj/numproc.o: include/numproc.h include/cvconst.h
-obj/register.o: include/register.h include/cvconst.h
+obj/register.o: include/register.h include/cvconst.h include/debugger.h
 
