@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.4 2001/01/31 03:24:06 pete Exp $ */
+/* $Id: fullscr.c,v 1.5 2001/01/31 03:48:33 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -1948,8 +1948,8 @@ redraw (int first)
 	       : "r" ((int)(ldt)) /* inputs */
 	       : "%eax");
 	    ldtlinear.base <<= 3;
-	    ldtlinear.limit = (ldtlinear.base > 0xffff) ? 0xffff :
-	      (short)ldtlinear.base;
+	    ldtlinear.limit = /*(ldtlinear.base > 0xffff) ? 0xffff :
+	      (short)ldtlinear.base*/ 0x3ff;
 	    ldtlinear.base = 0;
 	  }
 	typ = 2;
