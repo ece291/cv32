@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.6 2001/01/31 04:48:22 pete Exp $ */
+/* $Id: fullscr.c,v 1.7 2001/01/31 04:55:16 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -1163,13 +1163,6 @@ step (KIND_TYPE kind)
   if ((int03hit = (i == 0x03)
        && (get_breakpoint (BP_Code, 0, a_tss.tss_eip - 1) != -1 || kind == R_RunMain)))
     a_tss.tss_eip--;  /* point back to Int 3 */
-/*  if (i == 0x03 && get_breakpoint (BP_Code, 0, a_tss.tss_eip - 1) != -1) {
-    a_tss.tss_eip--; int03hit = 1;
-  } else if (i == 0x03 && get_breakpoint (BP_Code, 0, a_tss.tss_eip) != -1
-       && a_tss.tss_eip == main_entry)
-    int03hit = 1;
-  else
-    int03hit = 0;*/
   if (kind == R_Over && b >= 0)
     reset_breakpoint (b);  /* reset only after get_breakpoint did its thing */
   if (tracing) return;
