@@ -1,6 +1,6 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: ed.c,v 1.2 2001/01/31 03:24:06 pete Exp $ */
+/* $Id: ed.c,v 1.3 2001/12/12 07:31:38 pete Exp $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,13 +19,12 @@ extern char *setupfilename;
 static void
 usage (char *myself)
 {
-  fprintf (stderr, "\
-Usage: %s [debug args] debug-image [image args]
-
-Options:  -p path    Specify path for source files.
-          -d         Enable dual monitor display.
-          -s file    Load setup from specified file.
-", myself);
+  fprintf (stderr,
+"\nUsage: %s [debug args] debug-image [image args]"
+"\n"
+"\nOptions:  -p path    Specify path for source files."
+"\n          -d         Enable dual monitor display."
+"\n          -s file    Load setup from specified file.", myself);
   exit (1);
 }
 /* ------------------------------------------------------------------------- */
