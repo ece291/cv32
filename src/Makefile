@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2001/01/31 04:48:22 pete Exp $
+# $Id: Makefile,v 1.5 2001/01/31 04:51:25 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR
 
@@ -23,10 +23,12 @@ cv32 : $(EO)
 	stubify cv32
 
 clean :
-	-del nasm\*.o
 	-del *.o
 	-del cv32
 	-del cv32.exe
+
+veryclean : clean
+	-del nasm\*.o
 	-del expr.c
 
 # DEPENDENCIES
