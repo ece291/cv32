@@ -1,6 +1,6 @@
 /* CodeView/32 - TNumericProcessorViewer Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: numproc.cpp,v 1.1 2001/02/05 08:30:22 pete Exp $ */
+/* $Id: numproc.cpp,v 1.2 2001/03/20 19:36:43 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -154,7 +154,7 @@ void TFPFlagsViewer::getText(char *dest, ccIndex item, short maxLen)
 {
     unsigned long flags = 0;
     char *buf = (char *)alloca(100);
-    static char *rtype[] = { "R", "-", "+", "0" };
+    static char rtype[] = { 'R', '-', '+', '0' };
 
     switch(type) {
 	case ControlFlags:
@@ -170,30 +170,30 @@ void TFPFlagsViewer::getText(char *dest, ccIndex item, short maxLen)
 	    sprintf(buf, "%04lx", flags & 0xffff);
 	    break;
 	case 1:
-	    sprintf(buf, "PR=%s", (flags & (1 << 5)) ? "N" : "Y");
+	    sprintf(buf, "PR=%c", (flags & (1 << 5)) ? 'N' : 'Y');
 	    break;
 	case 2:
-	    sprintf(buf, "UN=%s", (flags & (1 << 4)) ? "N" : "Y");
+	    sprintf(buf, "UN=%c", (flags & (1 << 4)) ? 'N' : 'Y');
 	    break;
 	case 3:
-	    sprintf(buf, "OV=%s", (flags & (1 << 3)) ? "N" : "Y");
+	    sprintf(buf, "OV=%c", (flags & (1 << 3)) ? 'N' : 'Y');
 	    break;
 	case 4:
-	    sprintf(buf, "ZD=%s", (flags & (1 << 2)) ? "N" : "Y");
+	    sprintf(buf, "ZD=%c", (flags & (1 << 2)) ? 'N' : 'Y');
 	    break;
 	case 5:
-	    sprintf(buf, "DN=%s", (flags & (1 << 1)) ? "N" : "Y");
+	    sprintf(buf, "DN=%c", (flags & (1 << 1)) ? 'N' : 'Y');
 	    break;
 	case 6:
-	    sprintf(buf, "IV=%s", (flags & (1 << 0)) ? "N" : "Y");
+	    sprintf(buf, "IV=%c", (flags & (1 << 0)) ? 'N' : 'Y');
 	    break;
 	case 7:
 	    switch(type) {
 		case ControlFlags:
-		    sprintf(buf, "RD=%s", rtype[(flags >> 10) & 3]);
+		    sprintf(buf, "RD=%c", rtype[(flags >> 10) & 3]);
 		    break;
 		case StatusFlags:
-		    sprintf(buf, "ST=%s", (flags & (1 << 6)) ? "Y" : "N");
+		    sprintf(buf, "ST=%c", (flags & (1 << 6)) ? 'Y' : 'N');
 		    break;
 	    }
 	    break;
