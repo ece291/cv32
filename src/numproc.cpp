@@ -1,6 +1,6 @@
-/* CodeView/32 - TNumericProcessorViewer Implementation */
+/* CodeView/32 - TNumericProcessorWindow Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: numproc.cpp,v 1.5 2001/03/22 03:07:06 pete Exp $ */
+/* $Id: numproc.cpp,v 1.6 2001/03/22 03:30:12 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
