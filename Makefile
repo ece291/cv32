@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.16 2001/04/23 03:31:07 pete Exp $
+# $Id: Makefile,v 1.17 2001/04/27 06:25:09 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
 
@@ -18,6 +18,7 @@ LINK_EO = $(addprefix obj/, $(EO))
 
 EO_TV = \
 	debugapp.o\
+	debugger.o\
 	cvmenu.o\
 	cvstatus.o\
 	cvhint.o\
@@ -80,6 +81,7 @@ src/nasm/nasm.h: src/nasm/insnsi.h
 
 obj/debugapp.o: include/debugapp.h include/fileview.h include/ldt.h \
 	include/numproc.h include/register.h include/cvconst.h
+obj/debugger.o: include/debugger.h
 obj/cvmenu.o: include/debugapp.h include/cvconst.h
 obj/cvstatus.o: include/debugapp.h include/cvhint.h include/hintstat.h \
 	include/cvconst.h
