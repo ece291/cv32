@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.5 2001/02/05 08:30:50 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.6 2001/03/21 03:52:54 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -73,6 +73,7 @@ TDebugApp::TDebugApp(int argc, char **argv) :
 void TDebugApp::handleEvent(TEvent &event)
 {
     TView *w;
+    TRect r = TProgram::deskTop->getExtent();
 
     TApplication::handleEvent(event);
 
@@ -97,10 +98,12 @@ void TDebugApp::handleEvent(TEvent &event)
 		break;
 
 	    case cmNumericProcessorCmd:
-		w = validView(
-		    new TNumericProcessorWindow(TProgram::deskTop->getExtent()));
-		if(w != 0)
+		w = validView(new TNumericProcessorWindow(TRect(r)));
+		if(w != 0) {
+		    r.a.y = r.b.y - 10;
+		    w->changeBounds(r);
 		    deskTop->insert(w);
+		}
 		break;
 
             default:                    //  Unknown command
