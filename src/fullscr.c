@@ -5,6 +5,7 @@
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
 /* Copyright 1994 by Morten Welinder, terra@diku.dk			     */
+/* Copyright 2000 by Peter Johnson, pete@bilogic.org			     */
 /* ------------------------------------------------------------------------- */
 /*
 
@@ -71,6 +72,7 @@ static word32 *code_pane_pos;
 static int register_pane_origin;
 static int flag_pane_origin;
 static word32 data_dump_origin, data_dump_last, data_dump_size;
+static unsigned data_dump_selector;
 static int npx_pane_origin;
 static int stack_dump_origin, stack_dump_last, stack_dump_more;
 static word32 *stack_dump_pos;
@@ -105,6 +107,11 @@ static int help_pane_active;
 static int module_pane_active;
 static int source_pane_active;
 static int watch_pane_active;
+
+/* debugging functions from dbgcom.c (libdbg) */
+extern int invalid_sel_addr(short sel, unsigned a, unsigned len, char for_write);
+extern int read_sel_addr(unsigned child_addr, void *buf, unsigned len, unsigned sel);
+extern int write_sel_addr(unsigned sel, unsigned child_addr, void *buf, unsigned len);
 
 /* Odds and ends.  */
 #define MAXINSTLEN 16
@@ -248,13 +255,15 @@ static char *helptext[] = {
   "",
   "",
   "Data pane keys:",
+  "(use the LDT to choose selector other than cs,ds,ss)",
   "",
   "C-\033,C-\032    : Start data display one byte earlier/later.",
   "C-b        : Display data as bytes.",
-  "C-c        : Go to the the current instruction.",
-  "C-g        : Go to specified address.",
+  "C-c        : Go to the the current instruction in cs.",
+  "C-d        : Go to the data segment (ds).",
+  "C-g        : Go to specified offset in current selector.",
   "C-l        : Display data as 32-bit words (`longs').",
-  "C-s        : Go to the stack.",
+  "C-s        : Go to the stack (ss).",
   "C-w        : Display data as 16-bit words.",
   "F2         : Set data write breakpoint at focus.",
   "Alt-F2     : Set data read/write breakpoint at focus.",
@@ -268,6 +277,12 @@ static char *helptext[] = {
   "C-z        : Zero register.",
   "C-n        : Negate register.",
   "=          : Enter new value for register.",
+  "",
+  "",
+  "",
+  "LDT pane keys:",
+  "",
+  "Enter      : Choose active selector for data pane.",
   "",
   "",
   "",
@@ -1403,7 +1418,7 @@ redraw (int first)
 
   if (first)
     {
-      int y = toplines + 1, x1 = cols - 18, x2 = cols - 5, x3 = 46;
+      int y = toplines + 1, x1 = cols - 18, x2 = cols - 5, x3 = 47;
 
       frame (0, 0, cols - 1, rows - 1);
       frame (x2, 0, cols - 1, y);
@@ -1458,7 +1473,7 @@ redraw (int first)
 
   {
     /* Show breakpoints */
-    int b, x = 47, y = toplines + 2, width = cols - 48;
+    int b, x = 48, y = toplines + 2, width = cols - 49;
     char *name;
     int32 delta;
 
@@ -1505,31 +1520,31 @@ redraw (int first)
     {
       /* Show data dump */
       word32 p = data_dump_origin;
-      int b, x, y = toplines + 2, ok, width = 45;
+      int b, x, y = toplines + 2, ok, width = 46;
       unsigned char data[8], xpos[8];
 
       for (x = 0; x < 8; x++)
-	xpos[x] = 10
+	xpos[x] = 14
 	  + ((data_dump_size == 1) ? (x * 3) :
 	     ((data_dump_size == 2) ? ((x / 2) * 5 + (~x & 1) * 2) :
 	      ((x / 4) * 9 + (~x & 3) * 2)));
 
       while (y < rows - 1)
 	{
-	  if ((ok = valid_addr (p, 8)))
-	    read_child (p, data, 8);
+	  if ((ok = !invalid_sel_addr (data_dump_selector, p, 8, 0)))
+	    read_sel_addr (p, data, 8, data_dump_selector);
 
-	  sprintf (buf, "%08lx: %35s", p, "");
+	  sprintf (buf, "%03x:%08lx: %32s", data_dump_selector, p, "");
 	  for (x = 0; x < 8; x++)
-	    if (ok || valid_addr (p + x, 1))
+	    if (ok || !invalid_sel_addr (data_dump_selector, p + x, 1, 0))
 	      {
-		if (!ok) read_child (p + x, data + x, 1);
+		if (!ok) read_sel_addr (p + x, data + x, 1, data_dump_selector);
 		buf[xpos[x]] = hexchars[data[x] >> 4];
 		buf[xpos[x] + 1] = hexchars[data[x] & 0xf];
-		buf[37 + x] = (data[x] ? data[x] : '.');
+		buf[38 + x] = (data[x] ? data[x] : '.');
 	      }
 	    else
-	      buf[xpos[x]] = buf[xpos[x] + 1] = buf[37 + x] = '?';
+	      buf[xpos[x]] = buf[xpos[x] + 1] = buf[38 + x] = '?';
 	  putl (1, y, width, buf);
 
 	  screen_attr = screen_attr_break;
@@ -1541,7 +1556,7 @@ redraw (int first)
 			      + breakpoint_table[b].length))
 		{
 		  highlight (xpos[x] + 1, y, 2);
-		  highlight (38 + x, y, 1);
+		  highlight (39 + x, y, 1);
 		}
 	  screen_attr = screen_attr_normal;
 	  p += 8;
@@ -2119,8 +2134,8 @@ redraw (int first)
 	  y = 2 * pane_pos;
 	  if (y + 1 < bottomlines)
 	    {
-	      highlight (47, toplines + 2 + y++, cols - 48);
-	      highlight (47, toplines + 2 + y++, cols - 48);
+	      highlight (48, toplines + 2 + y++, cols - 49);
+	      highlight (48, toplines + 2 + y++, cols - 49);
 	    }
 	}
 	break;
@@ -2132,8 +2147,8 @@ redraw (int first)
 
 	  if (y < bottomlines)
 	    {
-	      highlight (38 + x, toplines + 2 + y, data_dump_size);
-	      highlight (11 + (width1 + 1) * (x >> shift),
+	      highlight (39 + x, toplines + 2 + y, data_dump_size);
+	      highlight (15 + (width1 + 1) * (x >> shift),
 			 toplines + 2 + y, width1);
 	    }
 	}
@@ -2426,6 +2441,7 @@ initialize ()
 
   data_dump_origin = areas[A_data].first_addr;
   data_dump_size = 1;
+  data_dump_selector = a_tss.tss_ds;
   code_dump_origin = a_tss.tss_eip;
   register_pane_origin = 0;
   flag_pane_origin = 0;
@@ -2898,11 +2914,18 @@ data_pane_command (int key)
     case K_Control_ERight:
       data_dump_origin++;
       break;
+    case K_Control_D:
+      data_dump_selector = a_tss.tss_ds;
+      data_dump_origin = 0;
+      pane_pos = 0;
+      break;
     case K_Control_S:
+      data_dump_selector = a_tss.tss_ss;
       data_dump_origin = a_tss.tss_esp;
       pane_pos = 0;
       break;
     case K_Control_C:
+      data_dump_selector = a_tss.tss_cs;
       data_dump_origin = a_tss.tss_eip;
       data_dump_size = 1;
       pane_pos = 0;
@@ -2968,16 +2991,16 @@ data_pane_command (int key)
 		      {
 			while (p0 != p)
 			  {
-			    if (valid_addr (v, 1))
-			      write_child (v, p0, 1);
+			    if (!invalid_sel_addr (data_dump_selector, v, 1, 1))
+			      write_sel_addr (data_dump_selector, v, p0, 1);
 			    else
 			      bad = 1;
 			    p0++, v++;
 			  }
 			if (q == '"')
 			  {
-			    if (valid_addr (v, 1))
-			      write_child (v, s + 1, 1);
+			    if (!invalid_sel_addr (data_dump_selector, v, 1, 1))
+			      write_sel_addr (data_dump_selector, v, s + 1, 1);
 			    else
 			      bad = 1;
 			    v++;
@@ -2996,8 +3019,8 @@ data_pane_command (int key)
 		    if (ok)
 		      {
 			*p = q;
-			if (valid_addr (v, data_dump_size))
-			  write_child (v, &res, data_dump_size);
+			if (!invalid_sel_addr (data_dump_selector, v, data_dump_size, 1))
+			  write_sel_addr (data_dump_selector, v, &res, data_dump_size);
 			else
 			  bad = 1;
 			v += data_dump_size;
@@ -3259,6 +3282,14 @@ gildt_pane_command (int key)
     switch (key)
       {
       case K_Return:
+	if(typ == 2)
+	  {
+	    data_dump_selector = no * 8 | (typ ? ((a_tss.tss_cs & 3) | 4) : 0);
+	    data_dump_origin = 0;
+	    pane_positions[PANE_DATA] = 0;
+	  }
+	else
+	  {
 	i = getdescriptor (base, no, &descr);
 	if (i >= 0 && ((allowed_descriptors[typ] >> i) & 1))
 	  switch (i)
@@ -3269,6 +3300,7 @@ gildt_pane_command (int key)
 	      break;
 	    default:
 	    }
+	  }
 	break;
       }
   redraw (0);
