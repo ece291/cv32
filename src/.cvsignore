@@ -1,4 +1,4 @@
 expr.c 
-fsdb* 
+cv32* 
 *.sw* 
 *.o 
