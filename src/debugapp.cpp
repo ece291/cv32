@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.8 2001/03/22 06:14:22 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.9 2001/04/26 18:16:05 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -38,18 +38,38 @@ int main(int argc, char **argv)
 {
     jmp_buf start_state;
     char cmdline[128];
+    char *name = argv[1];
+    char temp[256];
+    FILE *f;
 
     if(argc == 1) {
 	fprintf(stderr, "Usage: %s debug-image\n", argv[0]);
 	exit(1);
     }
 
-    syms_init(argv[1]);
+    f = fopen(name, "rb");
+    if(f) {
+	fclose(f);
+    } else {
+	// append .exe and try again
+	strcpy(temp, name);
+	strcat(temp, ".exe");
+	name = temp;
+	f = fopen(name, "rb");
+	if(f) {
+	    fclose(f);
+	} else {
+	    fprintf(stderr, "Could not find %s or %s\n", argv[1], name);
+	    exit(1);
+	}
+    }
+
+    syms_init(name);
 
     cmdline[1] = 13;
     cmdline[0] = 0;
-    if(v2loadimage(argv[1], cmdline, start_state)) {
-	printf("Load failed for image %s\n", argv[1]);
+    if(v2loadimage(name, cmdline, start_state)) {
+	fprintf(stderr, "Load failed for image %s\n", argv[1]);
 	exit(1);
     }
 
