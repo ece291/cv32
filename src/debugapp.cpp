@@ -1,6 +1,6 @@
 /* CodeView/32 - TDebugApp Implementation */
 /* Copyright (c) 2001 by Peter Johnson, pete@bilogic.org */
-/* $Id: debugapp.cpp,v 1.3 2001/02/04 20:54:27 pete Exp $ */
+/* $Id: debugapp.cpp,v 1.4 2001/02/04 21:41:58 pete Exp $ */
 
 #include <stdio.h>
 #include <string.h>
@@ -66,6 +66,7 @@ TDebugApp::TDebugApp(int argc, char **argv) :
     TProgInit(&TDebugApp::initStatusLine, &TDebugApp::initMenuBar,
 	&TDebugApp::initDeskTop)
 {
+    TApplication::setScreenMode(0x503);	    // switch into 80x50 display mode
 }
 
 void TDebugApp::handleEvent(TEvent &event)
