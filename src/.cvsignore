@@ -1,5 +1,2 @@
 expr.c 
-cv32* 
 *.sw* 
-*.o 
-.files 
