@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.19 2001/04/27 06:29:09 pete Exp $
+# $Id: Makefile,v 1.20 2001/04/28 21:40:11 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR -Iinclude
 
@@ -19,6 +19,7 @@ LINK_EO = $(addprefix obj/, $(EO))
 EO_TV = \
 	debugapp.o\
 	debugger.o\
+	disassembler.o\
 	cvmenu.o\
 	cvstatus.o\
 	cvhint.o\
@@ -26,6 +27,10 @@ EO_TV = \
 	ldt.o\
 	numproc.o\
 	register.o\
+	expr.o\
+	nasm/disasm.o\
+	nasm/insnsd.o\
+	nasm/sync.o\
 	$E
 LINK_EO_TV = $(addprefix obj/, $(EO_TV))
 
@@ -81,8 +86,9 @@ src/nasm/nasm.h: src/nasm/insnsi.h
 
 obj/debugapp.o: include/debugapp.h include/fileview.h include/ldt.h \
 	include/numproc.h include/register.h include/cvconst.h \
-	include/debugger.h
-obj/debugger.o: include/debugger.h
+	include/debugger.h include/disassembler.h
+obj/debugger.o: include/debugger.h include/disassembler.h
+obj/disassembler.o: include/disassembler.h
 obj/cvmenu.o: include/debugapp.h include/cvconst.h
 obj/cvstatus.o: include/debugapp.h include/cvhint.h include/hintstat.h \
 	include/cvconst.h
@@ -91,4 +97,4 @@ obj/fileview.o: include/fileview.h include/cvconst.h
 obj/ldt.o: include/ldt.h include/debugger.h
 obj/numproc.o: include/numproc.h include/cvconst.h
 obj/register.o: include/register.h include/cvconst.h include/debugger.h
-
+include/disassembler.h: include/debugger.h
