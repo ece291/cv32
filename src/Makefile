@@ -1,6 +1,8 @@
-# $Id: Makefile,v 1.5 2001/01/31 04:51:25 pete Exp $
+# $Id: Makefile,v 1.6 2001/02/02 17:03:33 pete Exp $
 
 CFLAGS = -O2 -Wall -DFULLSCR
+
+CPPFLAGS = -fno-exceptions -fno-rtti -O2 -Wall
 
 EO = \
 	ed.o\
@@ -13,19 +15,36 @@ EO = \
 	nasm/sync.o\
 	$E
 
+EO_TV = \
+	debugapp.o\
+	cvmenu.o\
+	cvstatus.o\
+	cvhint.o\
+	fileview.o\
+	$E
+
 .c.o:
 	gcc $(CFLAGS) -o $*.o -c $*.c
 
-all : cv32
+.cpp.o:
+	gpp $(CPPFLAGS) -o $*.o -c $*.cpp
+
+all : cv32 cv32tv
 
 cv32 : $(EO) 
 	gcc -v -o cv32 $(EO) -ldbg
 	stubify cv32
 
+cv32tv : $(EO_TV)
+	gcc -o cv32tv $(EO_TV) -ldbg -lrhtv -lstdcxx
+	stubify cv32tv
+
 clean :
 	-del *.o
 	-del cv32
 	-del cv32.exe
+	-del cv32tv
+	-del cv32tv.exe
 
 veryclean : clean
 	-del nasm\*.o
