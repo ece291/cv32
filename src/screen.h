@@ -1,4 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+/* $Id: screen.h,v 1.2 2001/01/31 03:24:06 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 typedef enum { CL_Info, CL_Msg, CL_Error } CL_TYPE;
 

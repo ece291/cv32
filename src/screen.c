@@ -1,5 +1,6 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
+/* $Id: screen.c,v 1.2 2001/01/31 03:24:06 pete Exp $ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,4 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
+/* $Id: ed.h,v 1.2 2001/01/31 03:24:06 pete Exp $ */
 #ifndef _ED_H_
 #define _ED_H_
 

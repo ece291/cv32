@@ -1,6 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
+/* $Id: fullscr.c,v 1.4 2001/01/31 03:24:06 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */

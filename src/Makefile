@@ -1,3 +1,5 @@
+# $Id: Makefile,v 1.2 2001/01/31 03:24:06 pete Exp $
+
 CFLAGS = -O2 -Wall -DFULLSCR
 
 EO = \
