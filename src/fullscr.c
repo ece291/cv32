@@ -1,7 +1,7 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-/* $Id: fullscr.c,v 1.12 2002/03/30 18:43:20 pete Exp $ */
+/* $Id: fullscr.c,v 1.13 2002/03/31 21:27:11 pete Exp $ */
 /* ------------------------------------------------------------------------- */
 /*			    FULL SCREEN DEBUGGER			     */
 /*									     */
@@ -1724,36 +1724,47 @@ redraw (int first)
 
   if (sse_pane_active)
   {
-    int i, y = 1, width = cols - 19;
+    int i, j, k, y = 1, width = cols - 19;
     if (enable_sse) {
-      for (i = sse_pane_origin; y <= toplines && i < 8*4; i++) {
-	/* We assume that `float' is the same type as MMX_reg(i)[j*4]. */
-	unsigned char *xreg = &(XMM_reg(i/4))[(i%4)*4];
-	int sign = xreg[3] >> 7;
-	unsigned char exp = xreg[3] & 0x7F;
-	float f = *((float*)xreg);
-	char *dstr = alloca (30);
+      for (i = 0; y <= toplines && i < 8; i++) {
+	char *bufp = buf;
 
-	dstr[0] = sign ? '-' : '+';
-	dstr[1] = '\0';
-	if (*((unsigned int *)xreg) == 0)
-	  strcat (dstr, "Zero");
-	else if (exp == 0x7F)
+	bufp += sprintf(bufp, "xmm(%d): ", i);
+	for (j=3; j>=0; j--)
 	  {
-	    if (xreg[2] == 0x80 && xreg[1] == 0x00 && xreg[0] == 0x00)
-	      strcat (dstr, "Inf");
-	    else
-	      strcat (dstr, "NaN");
-	  }
-	else
-	  sprintf(dstr, "%+.6g", f);
+	    /* We assume that `float' is the same type as MMX_reg(i)[j*4]. */
+	    unsigned char *xreg = &(XMM_reg(i))[j*4];
+	    int sign = xreg[3] >> 7;
+	    unsigned char exp = xreg[3] & 0x7F;
+	    float f = *((float*)xreg);
+	    char *dstr = alloca (30);
 
-	if (i%4 == 0)
-	  sprintf (buf, "xmm(%d): %02x%02x%02x%02x %s", i/4,
-		   xreg[3], xreg[2], xreg[1], xreg[0], dstr);
-	else
-	  sprintf (buf, "        %02x%02x%02x%02x %s",
-		   xreg[3], xreg[2], xreg[1], xreg[0], dstr);
+	    dstr[0] = sign ? '-' : '+';
+	    dstr[1] = '\0';
+	    if (*((unsigned int *)xreg) == 0)
+	      strcat (dstr, "Zero");
+	    else if (exp == 0x7F)
+	      {
+		if (xreg[2] == 0x80 && xreg[1] == 0x00 && xreg[0] == 0x00)
+		  strcat (dstr, "Inf");
+		else
+		  strcat (dstr, "NaN");
+	      }
+	    else
+	      sprintf(dstr, "%+.6g", f);
+
+	    bufp += sprintf (bufp, "%-13s", dstr);
+	  }
+	putl (1, y++, width, buf);
+
+	bufp = buf;
+	bufp += sprintf(bufp, "        ");
+	for (j=3; j>=0; j--)
+	  {
+	    for (k=3; k>=0; k--)
+	      bufp += sprintf(bufp, "%02x", XMM_reg(i)[j*4+k]);
+	    bufp += sprintf(bufp, "     ");
+	  }
 	putl (1, y++, width, buf);
       }
     }
@@ -2166,7 +2177,6 @@ redraw (int first)
 	/* Fall through */
       case PANE_CODE:
       case PANE_NPX:
-      case PANE_SSE:
       case PANE_GDT:
       case PANE_IDT:
       case PANE_LDT:
@@ -2217,6 +2227,13 @@ redraw (int first)
       case PANE_WATCH:
 	pane_pos = MIN (pane_pos, bottomlines - 1);
 	highlight (1, toplines + 2 + pane_pos, 45);
+	break;
+      case PANE_SSE:
+	{
+	  int x = pane_pos & 3, y = pane_pos >> 2;
+	  highlight (8 + 13*x, y*2+1, 12);
+	  highlight (8 + 13*x, y*2+2, 12);
+	}
 	break;
       }
     screen_attr = screen_attr_normal;
@@ -3201,10 +3218,10 @@ npx_pane_command (int key)
 static void
 sse_pane_command (int key)
 {
-  int base = 0;
-  int no = sse_pane_origin + pane_pos;
-  int reg = (no - base)/4;
-  int reg_part = (no - base)%4;
+  int count = 8*4;
+  int no = pane_pos;
+  int reg = no>>2;
+  int reg_part = 3-(no&3);
   unsigned char *xreg = &(XMM_reg(reg))[reg_part*4];
   int sign = xreg[3] >> 7;
   float *fp = ((float*)xreg);
@@ -3215,63 +3232,102 @@ sse_pane_command (int key)
   if (!enable_sse)
       return;
 
-  if (!standardmovement (key, base + 8*4, toplines, &sse_pane_origin)
-      && reg >= 0)
-    switch (key)
-      {
-      case K_Control_C:
-      case K_Control_E:
-      case K_Control_Z:
-      case K_Delete:
-      case K_EDelete:
-	memset (xreg, 0, 4);
-	update = 1;
-	break;
-      case K_Control_N:
-	if (sign)
+  switch (key)
+    {
+    case K_Left:
+    case K_ELeft:
+      if (pane_pos > 0)
+	pane_pos--;
+      break;
+    case K_Up:
+    case K_EUp:
+      if (pane_pos > 3)
+	pane_pos-=4;
+      break;
+    case K_Right:
+    case K_ERight:
+      if (no < count - 1)
+	pane_pos++;
+      break;
+    case K_Down:
+    case K_EDown:
+      if (no < count - 4)
+	pane_pos+=4;
+      break;
+    case K_Home:
+    case K_EHome:
+    case K_PageUp:
+    case K_EPageUp:
+      pane_pos = 0;
+      break;
+    case K_End:
+    case K_EEnd:
+    case K_PageDown:
+    case K_EPageDown:
+      pane_pos = count - 1;
+      break;
+    case K_Control_C:
+    case K_Control_E:
+    case K_Control_Z:
+    case K_Delete:
+    case K_EDelete:
+      if (reg >= 0)
+	{
+	  memset (xreg, 0, 4);
+	  update = 1;
+	}
+      break;
+    case K_Control_N:
+      if (reg >= 0)
+	{
+	  if (sign)
 	    xreg[3] &= 0x7F;
-	else
+	  else
 	    xreg[3] |= 0x80;
-	update = 1;
-	break;
-      case ' ' ... '~':
-	s[0] = key; s[1] = '\0';
-	if (!read_string (key == '=' ? "" : s) && read_buffer[0] != '\0')
-	  {
-	    p = read_buffer;
-	    while (*p == ' ')
-	      p++;
-	    if (*p == '\0')
-	      break;
-	    strlwr (p);
-	    if (strcmp (p, "+inf") == 0
-		|| strcmp (p, "inf") == 0
-		|| strcmp (p, "-inf") == 0)
-	      {
-		xreg[3] = 0x7f;
-		xreg[2] = 0x80;
-		xreg[1] = xreg[0] = 0;
-		if (*p == '-')
-		  xreg[3] |= 0x80;
-		update = 1;
-	      }
-	    else
-	      {
-		f = strtod (p, &endp);
-		if (*p != '\0' && *endp)
-		  message (CL_Error, "Expression not understood");
-		else
-		  {
-		    *fp = f;
-		    if (*p == '-')
-		      xreg[3] |= 0x80; /* for -Zero */
-		    else
-		      xreg[3] &= 0x7F;
-		    update = 1;
-		  }
-	      }
-	  }
-      }
+	  update = 1;
+	}
+      break;
+    case ' ' ... '~':
+      if (reg >= 0)
+	{
+	  s[0] = key; s[1] = '\0';
+	  if (!read_string (key == '=' ? "" : s) && read_buffer[0] != '\0')
+	    {
+	      p = read_buffer;
+	      while (*p == ' ')
+		p++;
+	      if (*p == '\0')
+		break;
+	      strlwr (p);
+	      if (strcmp (p, "+inf") == 0
+		  || strcmp (p, "inf") == 0
+		  || strcmp (p, "-inf") == 0)
+		{
+		  xreg[3] = 0x7f;
+		  xreg[2] = 0x80;
+		  xreg[1] = xreg[0] = 0;
+		  if (*p == '-')
+		    xreg[3] |= 0x80;
+		  update = 1;
+		}
+	      else
+		{
+		  f = strtod (p, &endp);
+		  if (*p != '\0' && *endp)
+		    message (CL_Error, "Expression not understood");
+		  else
+		    {
+		      *fp = f;
+		      if (*p == '-')
+			xreg[3] |= 0x80; /* for -Zero */
+		      else
+			xreg[3] &= 0x7F;
+		      update = 1;
+		    }
+		}
+	    }
+	}
+    }
 
   if (update)
     switch (reg)
